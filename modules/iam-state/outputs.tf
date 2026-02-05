@@ -1,0 +1,6 @@
+# /modules/iamstate/outputs.tf
+
+output "deploy_role_arn" {
+  description = "ARN deploy-role"
+  value       = aws_iam_role.deploy_assume_role.arn
+}

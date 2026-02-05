@@ -1,0 +1,13 @@
+.terragrunt-cache
+**/*.tfstate
+.terraform
+**/*.crt
+**/*.key
+**/*.ovpn
+**/*.csr
+**/*.pem
+data/
+temp/
+**/eks-deploy
+*-secret.yaml
+!*-sealed-secret.yaml

@@ -1,0 +1,1 @@
+best/date=20250715/device_id=Echo-1421724338586/cam_id=0/dt=20250715T220424.690000Z/best_data.parquet | HEAD_FAILED

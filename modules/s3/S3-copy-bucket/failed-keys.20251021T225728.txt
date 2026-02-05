@@ -1,0 +1,5 @@
+best/date=20250703/device_id=EAC5k-OrinAGX/cam_id=0/dt=20250703T121950.131000Z/best_data.parquet | HEAD_FAILED
+best/date=20250703/device_id=EAC5k-OrinAGX/cam_id=0/dt=20250703T121954.320000Z/best_data.parquet | HEAD_FAILED
+best/date=20250703/device_id=EAC5k-OrinAGX/cam_id=0/dt=20250703T121958.512000Z/best_data.parquet | HEAD_FAILED
+best/date=20250703/device_id=EAC5k-OrinAGX/cam_id=0/dt=20250703T122002.703000Z/best_data.parquet | HEAD_FAILED
+best/date=20250703/device_id=EAC5k-OrinAGX/cam_id=0/dt=20250703T121945.015000Z/best_data.parquet | HEAD_FAILED
