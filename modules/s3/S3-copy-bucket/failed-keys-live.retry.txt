@@ -1,2 +1,0 @@
-live/date=20250704/device_id=EAC5k-OrinAGX/cam_id=9/dt=20250704T115912.908Z/video_d_4000.ts | HEAD_FAILED
-live/date=20250704/device_id=EAC5k-OrinAGX/cam_id=9/dt=20250704T120230.988Z/data.parquet | HEAD_FAILED

@@ -1,4 +1,4 @@
-# AWS EKS Kubernetes Platform
+# POC "AWS EKS Kubernetes Platform"
 
 ## Project Overview
 
@@ -252,3 +252,32 @@ The implementation follows a layered approach aligned with production-ready best
   - Ingress is not responding
 
 ---
+
+## IAM for Pods (POC)
+
+This cluster supports two approaches for pod IAM access:
+
+### 1. IRSA (IAM Roles for Service Accounts)
+- Pods are associated with IAM Roles via Kubernetes ServiceAccount annotations.
+- Requires an OIDC provider configured for the EKS cluster.
+- Uses AWS STS `AssumeRoleWithWebIdentity`.
+- Steps:
+  1. Enable OIDC provider for the cluster.
+  2. Create IAM Role with trust policy for the ServiceAccount.
+  3. Attach necessary IAM Policy to the Role.
+  4. Annotate the ServiceAccount with the IAM Role ARN.
+  5. Pods using this ServiceAccount automatically get the credentials.
+
+### 2. EKS Pod Identity Agent
+- Pods request IAM credentials through a DaemonSet running on each node.
+- No OIDC provider required.
+- Centralized management via Terraform (`aws_eks_pod_identity_association`) or AWS API.
+- Steps:
+  1. Enable the `eks-pod-identity-agent` addon (`before_compute = true`).
+  2. Create IAM Role with required policies.
+  3. Create a ServiceAccount without annotations.
+  4. Associate ServiceAccount with IAM Role using `aws_eks_pod_identity_association`.
+  5. Pods automatically receive credentials via the agent.
+
+**POC approach:**  
+Both methods can coexist in the same cluster. Some workloads use IRSA, some use Pod Identity, allowing comparison of usability, deployment workflow, and security.

@@ -47,7 +47,7 @@ data "aws_iam_policy_document" "deploy_core_permissions" {
     resources = [
       "arn:aws:iam::${var.account}:role/eks-irsa-app-role",
       "arn:aws:iam::${var.account}:role/rds-app-access-role",
-      "arn:aws:sts::${var.account}:role/deploy-role",
+      "arn:aws:sts::${var.account}:role/cicd-role",
       "arn:aws:iam::${var.account}:role/aws-load-balancer-controller-role"
 
     ]
@@ -70,7 +70,6 @@ data "aws_iam_policy_document" "deploy_core_permissions" {
     ]
     resources = [
       "*"
-      # "arn:aws:ssm:${var.region}:${var.account}:parameter/dns/${var.client}.echotwin.xyz-ns"
     ]
   }
 
@@ -89,7 +88,6 @@ data "aws_iam_policy_document" "deploy_core_permissions" {
       "ecr:BatchCheckLayerAvailability"
     ]
     resources = [
-      # "arn:aws:ecr:${var.region}:${var.account}:repository/${var.env}-${var.client}/"
       "*"
     ]
   }
@@ -106,31 +104,6 @@ data "aws_iam_policy_document" "deploy_core_permissions" {
     ]
   }
 
-  # CloudFront permissions
-  statement {
-    effect = "Allow"
-    actions = [
-      "cloudfront:CreateDistribution",
-      "cloudfront:CreateOriginAccessControl",
-      "cloudfront:CreateInvalidation",
-      "cloudfront:GetDistribution",
-      "cloudfront:GetDistributionConfig",
-      "cloudfront:GetOriginAccessControl",
-      "cloudfront:GetInvalidation",
-      "cloudfront:ListDistributions",
-      "cloudfront:ListOriginAccessControls",
-      "cloudfront:ListInvalidations",
-      "cloudfront:ListTagsForResource",
-      "cloudfront:TagResource",
-      "cloudfront:UntagResource",
-      "cloudfront:UpdateDistribution",
-      "cloudfront:UpdateOriginAccessControl",
-      "cloudfront:DeleteDistribution",
-      "cloudfront:DeleteOriginAccessControl"
-    ]
-    resources = ["*"]
-  }
-
   statement {
     effect = "Allow"
     actions = [
@@ -143,55 +116,6 @@ data "aws_iam_policy_document" "deploy_core_permissions" {
       "route53:GetChange",
       "route53:ListTagsForResource",
       "route53:ChangeTagsForResource"
-    ]
-    resources = [
-      "*"
-    ]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "s3:PutBucketVersioning",
-      "s3:PutBucketPolicy",
-      "s3:PutBucketLogging",
-      "s3:PutEncryptionConfiguration",
-      "s3:ListBucket",
-      "s3:GetBucketLocation",
-      "s3:DeleteBucket",
-      "s3:CreateBucket",
-      "s3:GetBucketTagging",
-      "s3:GetBucketPolicy",
-      "s3:GetBucketAcl",
-      "s3:GetBucketCORS",
-      "s3:GetBucketWebsite",
-      "s3:GetBucketVersioning",
-      "s3:GetAccelerateConfiguration",
-      "s3:GetBucketRequestPayment",
-      "s3:GetBucketLogging",
-      "s3:GetLifecycleConfiguration",
-      "s3:GetReplicationConfiguration",
-      "s3:GetEncryptionConfiguration",
-      "s3:GetBucketObjectLockConfiguration",
-      "s3:PutBucketTagging",
-      "s3:GetBucketOwnershipControls", #  "Resource": "arn:aws:s3:::${var.client}-terraform-state"
-      "s3:GetBucketPublicAccessBlock", #  "Resource": "arn:aws:s3:::${var.client}-terraform-state"
-      "s3:GetObject",                  #  "Resource": "arn:aws:s3:::${var.client}-xxx-detections/*"
-      "s3:PutObject",
-      "s3:ObjectOwnerOverrideToBucketOwner",
-      "s3:PutObjectTagging", # for replication from ${var.client}-xxx-detections
-
-      "s3:ListAllMyBuckets",
-      "s3:PutBucketPublicAccessBlock",
-      "s3:PutBucketOwnershipControls",
-      "s3:PutBucketAcl",
-      "s3:PutBucketNotification",
-      "s3:GetBucketNotification",
-      "s3:PutBucketPolicy",
-      "s3:PutBucketCORS",
-      "s3:ListBucketVersions",
-      "s3:DeleteBucketPolicy",
-      "s3:DeleteObjectVersion"
     ]
     resources = [
       "*"
@@ -265,14 +189,6 @@ data "aws_iam_policy_document" "deploy_infra_permissions" {
       "iam:GetGroupPolicy",
 
       "eks:*",
-      "sqs:CreateQueue",
-      "sqs:tagqueue",
-      "sqs:getqueueattributes",
-      "sqs:listqueuetags",
-      "sqs:deletequeue",
-      "sqs:SetQueueAttributes",
-      "sqs:TagQueue",
-      "sqs:UntagQueue",
 
       "ec2:*", # !!!!
       "ec2:CreateVpc",
@@ -322,7 +238,6 @@ data "aws_iam_policy_document" "deploy_infra_permissions" {
       "ec2:DeleteLaunchTemplate",
       "ec2:DescribeNetworkInterfaces",
       "ec2:DisassociateAddress",
-      "ec2:CreateClientVpnEndpoint",
       "ec2:AssociateAddress",
 
       #for apigateway
@@ -333,11 +248,6 @@ data "aws_iam_policy_document" "deploy_infra_permissions" {
       "elasticloadbalancing:DescribeLoadBalancers",
       "elasticloadbalancing:DescribeListeners",
       "elasticloadbalancing:DescribeTargetGroups",
-      "apigateway:GET",
-      "apigateway:POST",
-      "apigateway:PUT",
-      "apigateway:PATCH",
-      "apigateway:DELETE",
 
       "logs:CreateLogGroup",
       "logs:DescribeLogGroups",
@@ -361,24 +271,6 @@ data "aws_iam_policy_document" "deploy_infra_permissions" {
       "secretsmanager:DescribeSecret",
       "secretsmanager:ListSecrets",
       "secretsmanager:GetResourcePolicy",
-
-      "rds:CreateDBSubnetGroup",
-      "rds:CreateDBParameterGroup",
-      "rds:DescribeDBSubnetGroups",
-      "rds:DescribeDBParameterGroups",
-      "rds:ModifyDBSubnetGroup",
-      "rds:ModifyDBParameterGroup",
-      "rds:DeleteDBSubnetGroup",
-      "rds:DeleteDBParameterGroup",
-      "rds:AddTagsToResource",
-      "rds:ListTagsForResource",
-      "rds:DescribeDBParameters",
-      "rds:CreateDBInstance",
-      "rds:DescribeDBInstances",
-      "rds:DeleteDBInstance",
-      "rds:CreateDBSnapshot",
-      "rds:DeleteDBSnapshot",
-      "rds:ModifyDBInstance",
 
       "acm-pca:PutPolicy",
       "acm-pca:GetPolicy",
@@ -412,19 +304,6 @@ data "aws_iam_policy_document" "deploy_infra_permissions" {
 
       "elasticloadbalancing:*",
 
-      "cloudformation:ListStacks",
-      "cloudformation:CreateStack",
-
-      "SNS:CreateTopic",
-      "SNS:TagResource",
-      "SNS:SetTopicAttributes",
-      "SNS:GetTopicAttributes",
-      "SNS:ListTagsForResource",
-      "SNS:DeleteTopic",
-      "SNS:Subscribe",
-      "SNS:GetSubscriptionAttributes",
-      "SNS:Unsubscribe",
-
       "cloudwatch:PutMetricAlarm",
       "cloudwatch:PutDashboard",
       "cloudwatch:DescribeAlarms",
@@ -442,66 +321,4 @@ data "aws_iam_policy_document" "deploy_infra_permissions" {
 resource "aws_iam_role_policy_attachment" "deploy_assume_infra_policy_attachment" {
   role       = aws_iam_role.deploy_assume_role.name
   policy_arn = aws_iam_policy.deploy_infra_policy.arn
-}
-
-resource "aws_iam_group" "developers" {
-  name = "developers"
-}
-
-resource "aws_iam_group_policy" "developers_s3_rw" {
-  name  = "developers-s3-rw"
-  group = aws_iam_group.developers.name
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject",
-          "s3:ListBucket",
-          "s3:ListAllMyBuckets",
-          "s3:GetBucketLocation",
-          "s3:GetBucketAcl",
-          "s3:GetObjectAcl"
-        ]
-        Resource = [
-          "arn:aws:s3:::${var.s3_detection}",
-          "arn:aws:s3:::${var.s3_detection}/*",
-          "arn:aws:s3:::${var.s3_jetsons_logs}",
-          "arn:aws:s3:::${var.s3_jetsons_logs}/*"
-        ]
-      }
-    ]
-  })
-}
-resource "aws_iam_group_policy" "developers_ecr" {
-  name  = "developers-ecr"
-  group = aws_iam_group.developers.name
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:GetRepositoryPolicy",
-          "ecr:DescribeRepositories",
-          "ecr:ListImages",
-          "ecr:DescribeImages",
-          "ecr:BatchGetImage",
-          "ecr:InitiateLayerUpload",
-          "ecr:UploadLayerPart",
-          "ecr:CompleteLayerUpload",
-          "ecr:PutImage"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
 }

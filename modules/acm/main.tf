@@ -1,6 +1,6 @@
 # /modules/acm/main.tf
 
-# Provider для us-east-1 ( for CloudFront cerificates)
+# Provider for us-east-1 ( for CloudFront cerificates)
 terraform {
   required_providers {
     aws = {
@@ -10,14 +10,14 @@ terraform {
   }
 }
 
-# Основной сертификат в текущем регионе
+# Main ACM certificate for the domain and wildcard
 resource "aws_acm_certificate" "wildcard" {
   domain_name               = "*.${var.domain_name}"
   subject_alternative_names = [var.domain_name]
   validation_method         = "DNS"
 }
 
-# Дополнительный сертификат для CloudFront в us-east-1
+# Additional certificate for CloudFront in us-east-1
 resource "aws_acm_certificate" "cloudfront_wildcard" {
   count                     = var.create_cloudfront_certificate ? 1 : 0
   provider                  = aws.us_east_1
@@ -48,7 +48,7 @@ resource "aws_route53_record" "validation" {
   allow_overwrite = true
 }
 
-# Route53 записи для валидации CloudFront сертификата
+# Route53 records for CloudFront certificate validation
 resource "aws_route53_record" "cloudfront_validation" {
   for_each = var.create_cloudfront_certificate ? {
     for dvo in aws_acm_certificate.cloudfront_wildcard[0].domain_validation_options : dvo.domain_name => {
@@ -71,7 +71,7 @@ resource "aws_acm_certificate_validation" "this" {
   validation_record_fqdns = [for record in aws_route53_record.validation : record.fqdn]
 }
 
-# Валидация CloudFront сертификата
+# CloudFront certificate validation
 resource "aws_acm_certificate_validation" "cloudfront" {
   count                   = var.create_cloudfront_certificate ? 1 : 0
   provider                = aws.us_east_1

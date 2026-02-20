@@ -1,15 +1,11 @@
 # /modules/s3-state/main.tf
 /*** S3 Bucket for storing Terraform state ***/
 
-resource "aws_s3_bucket" "state_s3" {
-  bucket     = var.bucket_name
-  depends_on = [aws_s3_bucket.logs_s3]
-}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
-resource "aws_s3_bucket_logging" "state_s3" {
-  bucket        = aws_s3_bucket.state_s3.id
-  target_bucket = aws_s3_bucket.logs_s3.id
-  target_prefix = "logs/"
+resource "aws_s3_bucket" "state_s3" {
+  bucket = var.bucket_name
 }
 
 resource "aws_s3_bucket_versioning" "state_s3" {
@@ -94,13 +90,3 @@ resource "aws_s3_bucket_policy" "state_s3" {
     ]
   })
 }
-
-/*** S3 Bucket for Logs ***/
-
-resource "aws_s3_bucket" "logs_s3" {
-  bucket = "${var.bucket_name}-logs"
-}
-
-data "aws_region" "current" {}
-
-data "aws_caller_identity" "current" {}

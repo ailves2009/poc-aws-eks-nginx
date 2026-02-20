@@ -16,18 +16,6 @@ variable "tags" {
   default     = {}
 }
 
-variable "s3_detection" {
-  description = "S3 bucket name for detections"
-  type        = string
-  default     = "xxx-yyy-detections"
-}
-
-variable "s3_jetsons_logs" {
-  description = "S3 bucket name for Jetsons logs"
-  type        = string
-  default     = "xxx-yyy-jetsons-logs"
-}
-
 variable "account" {
   description = "Target AWS account ID where the IAM role will be created"
   type        = string

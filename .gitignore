@@ -3,7 +3,6 @@
 .terraform
 **/*.crt
 **/*.key
-**/*.ovpn
 **/*.csr
 **/*.pem
 data/

@@ -70,26 +70,3 @@ variable "manage_default_network_acl" {
   default     = false
 }
 
-variable "vpn_client_cidr" {
-  description = "CIDR block for VPN clients"
-  type        = string
-  default     = "10.X.0.0/16"
-}
-
-variable "create_flow_logs" {
-  description = "Whether to create VPC Flow Logs"
-  type        = bool
-  default     = true
-}
-
-variable "create_for_all_vpcs" {
-  description = "When true, create Flow Logs for all VPCs in the account (in addition to module VPC)"
-  type        = bool
-  default     = false
-}
-
-variable "traffic_type" {
-  description = "Traffic type for VPC Flow Logs (ALL, ACCEPT, REJECT)"
-  type        = string
-  default     = "ALL"
-}

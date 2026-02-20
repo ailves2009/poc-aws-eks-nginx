@@ -1,12 +1,12 @@
 # /modules/s3-state/inputs.tf
 
 variable "bucket_name" {
-  description = "Имя S3 Bucket для хранения состояния Terraform"
+  description = "S3 bucket name for storing Terraform state"
   type        = string
 }
 
 variable "tags" {
-  description = "Теги для ресурсов"
+  description = "Tags for resources"
   type        = map(string)
   default     = {}
 }

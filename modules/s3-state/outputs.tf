@@ -1,8 +1,8 @@
 # /modules/s3-state/outputs.tf
 
-output "s3_detection" {
+output "s3_bucket_arn" {
   description = "S3 State Bucket name"
-  value       = aws_s3_bucket.state_s3.id
+  value       = aws_s3_bucket.state_s3.arn
 }
 
 output "region" {

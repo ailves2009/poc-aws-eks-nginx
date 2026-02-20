@@ -1,0 +1,24 @@
+# Minimal Argo CD values for Helm chart
+# Adjust as needed for production (ingress, TLS, admin password, etc.)
+
+server:
+  service:
+    type: ClusterIP
+  extraArgs: []
+
+controller:
+  metrics:
+    enabled: true
+
+repoServer:
+  resources: {}
+  persistence:
+    enabled: false
+
+applicationController:
+  resources: {}
+
+redis:
+  enabled: true
+  persistence:
+    enabled: false

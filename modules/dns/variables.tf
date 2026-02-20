@@ -1,5 +1,5 @@
 variable "domain_name" {
-  description = "Domain name for the hosted zone (e.g. tst-plt.echotwin.xyz)"
+  description = "Domain name for the hosted zone (e.g. poc-plt.ailves.xyz)"
   type        = string
 }
 

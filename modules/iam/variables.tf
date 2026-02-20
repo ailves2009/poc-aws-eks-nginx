@@ -25,9 +25,3 @@ variable "env" {
   type        = string
   default     = ""
 }
-
-variable "s3_detection" {
-  description = "S3 bucket name for detections"
-  type        = string
-  default     = "xxx-yyy-detections"
-}
