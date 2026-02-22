@@ -1,5 +1,4 @@
-# /modules/iam/cloudwatch.tf
-# https://repost.aws/questions/QUUWdk2GyPRKeTadZ9EpO3aQ/least-privilege-cloudwatch-logs-policy-for-api-gateway
+# modules/iam/cloudwatch.tf
 
 resource "aws_iam_role" "apigw_cloudwatch_logs" {
   name = "cloudwatch-logs-role"

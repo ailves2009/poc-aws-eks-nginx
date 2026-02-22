@@ -6,11 +6,13 @@ locals {
   env           = "plt"
   client        = "poc"
   domain_name   = "poc-eks.ailves2009.com"
-  tags       = {
-    Env         = "main"
-    Client      = "poc"
-    Managed     = "terraform"
-    Account     = "470201305353"
+  tags          = {
+    Env          = "plt"
+    Client       = "poc"
+    Managed      = "terraform"
+    Account      = "470201305353"
+    Project      = "poc-aws-eks-nginx"
+    Github       = ".."
   }
 }
 
@@ -26,6 +28,8 @@ provider "aws" {
       Client      = "${local.tags["Client"]}"
       Managed     = "${local.tags["Managed"]}"
       Account     = "${local.tags["Account"]}"
+      Project     = "${local.tags["Project"]}"
+      Github      = "${local.tags["Github"]}"
     }
   }
 }
@@ -38,6 +42,8 @@ provider "aws" {
       Client      = "${local.tags["Client"]}"
       Managed     = "${local.tags["Managed"]}"
       Account     = "${local.tags["Account"]}"
+      Project     = "${local.tags["Project"]}"
+      Github      = "${local.tags["Github"]}"
     }
   }
 }

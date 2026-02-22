@@ -1,18 +1,22 @@
 # modules/acm/monitoring.tf
 # SSL Certificate Monitoring for ACM для отслеживания истечения сертификатов
 
-# SNS Topic для уведомлений о сертификатах
+# Local variable for determining SNS topic ARN
+locals {
+  sns_topic_arn = var.create_sns_topic && length(var.alarm_email) > 0 ? aws_sns_topic.certificate_alerts[0].arn : var.sns_topic_arn
+}
+
+# SNS Topic for certificate alerts
 resource "aws_sns_topic" "certificate_alerts" {
   count = var.create_sns_topic && length(var.alarm_email) > 0 ? 1 : 0
   name  = var.sns_topic_name != null ? var.sns_topic_name : "acm-certificate-alerts-${replace(var.domain_name, ".", "-")}"
   tags = merge(var.tags, {
     Name   = "ACM Certificate Alerts"
     Domain = var.domain_name
-    # Environment = var.env
   })
 }
 
-# Email подписки для SNS Topic
+# Email subscriptions for SNS Topic
 resource "aws_sns_topic_subscription" "certificate_email_alerts" {
   for_each  = var.create_sns_topic && length(var.alarm_email) > 0 ? toset(var.alarm_email) : []
   topic_arn = aws_sns_topic.certificate_alerts[0].arn
@@ -20,12 +24,7 @@ resource "aws_sns_topic_subscription" "certificate_email_alerts" {
   endpoint  = each.value
 }
 
-# Локальная переменная для определения SNS topic ARN
-locals {
-  sns_topic_arn = var.create_sns_topic && length(var.alarm_email) > 0 ? aws_sns_topic.certificate_alerts[0].arn : var.sns_topic_arn
-}
-
-# CloudWatch Alarm для мониторинга истечения сертификата
+# CloudWatch Alarm for monitoring certificate expiry
 resource "aws_cloudwatch_metric_alarm" "certificate_expiry" {
   count = var.enable_monitoring ? 1 : 0
 
@@ -36,7 +35,7 @@ resource "aws_cloudwatch_metric_alarm" "certificate_expiry" {
   namespace           = "AWS/CertificateManager"
   period              = "86400" # 24 hours
   statistic           = "Minimum"
-  threshold           = "30" # Предупреждение за 30 дней до истечения
+  threshold           = "30" # Warning 30 days before expiry
   alarm_description   = "SSL Certificate expires in less than 30 days"
   alarm_actions       = local.sns_topic_arn != null ? [local.sns_topic_arn] : []
   ok_actions          = local.sns_topic_arn != null ? [local.sns_topic_arn] : []
@@ -49,11 +48,10 @@ resource "aws_cloudwatch_metric_alarm" "certificate_expiry" {
   tags = merge(var.tags, {
     Name   = "ACM Certificate Expiry Monitor"
     Domain = var.domain_name
-    # Environment = var.env
   })
 }
 
-# CloudWatch Dashboard для визуализации статуса сертификатов
+# CloudWatch Dashboard for visualizing certificate status
 resource "aws_cloudwatch_dashboard" "certificate_monitoring" {
   count = var.enable_monitoring ? 1 : 0
 
@@ -102,7 +100,7 @@ resource "aws_cloudwatch_dashboard" "certificate_monitoring" {
   })
 }
 
-# Дополнительный алarm для критического предупреждения (7 дней)
+# Additional alarm for critical warning (7 days)
 resource "aws_cloudwatch_metric_alarm" "certificate_critical_expiry" {
   count = var.enable_monitoring ? 1 : 0
 
@@ -113,7 +111,7 @@ resource "aws_cloudwatch_metric_alarm" "certificate_critical_expiry" {
   namespace           = "AWS/CertificateManager"
   period              = "86400" # 24 hours
   statistic           = "Minimum"
-  threshold           = "7" # Критическое предупреждение за 7 дней
+  threshold           = "7" # Critical warning 7 days before expiry
   alarm_description   = "CRITICAL: SSL Certificate expires in less than 7 days!"
   alarm_actions       = local.sns_topic_arn != null ? [local.sns_topic_arn] : []
   ok_actions          = local.sns_topic_arn != null ? [local.sns_topic_arn] : []
@@ -124,9 +122,8 @@ resource "aws_cloudwatch_metric_alarm" "certificate_critical_expiry" {
   }
 
   tags = merge(var.tags, {
-    Name   = "ACM Certificate Critical Expiry Monitor"
-    Domain = var.domain_name
-    # Environment = var.env
+    Name     = "ACM Certificate Critical Expiry Monitor"
+    Domain   = var.domain_name
     Severity = "Critical"
   })
 }

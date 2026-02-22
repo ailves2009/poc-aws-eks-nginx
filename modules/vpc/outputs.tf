@@ -30,7 +30,3 @@ output "public_route_table_ids" {
   value       = module.vpc.public_route_table_ids
 }
 
-output "apigw_nlb_sg_id" {
-  description = "ID of the security group allowing traffic from API Gateway to NLB"
-  value       = aws_security_group.apigw_to_nlb.id
-}

@@ -2,21 +2,20 @@
 
 output "wildcard_certificate_arn" {
   value = aws_acm_certificate.wildcard.arn
-  # arn:aws:acm:eu-west-3:470201305353:certificate/3bd88e8d-fb4a-497d-a065-adc818494dcb
-  # *.poc-plt.ailves.xyz
+  # *.poc-plt.domain.xyz
 }
 
 output "cloudfront_certificate_arn" {
   description = "ARN of the CloudFront certificate in us-east-1"
   value       = var.create_cloudfront_certificate ? aws_acm_certificate.cloudfront_wildcard[0].arn : null
-  # data.poc-plt.ailves.xyz
+  # data.poc-plt.domain.xyz
 }
 
 # Monitoring outputs
 output "cloudwatch_alarm_arn" {
   description = "ARN of the CloudWatch alarm for certificate expiry"
   value       = var.enable_monitoring ? aws_cloudwatch_metric_alarm.certificate_expiry[0].arn : null
-  # arn:aws:cloudwatch:eu-west-3:470201305353:alarm:acm-certificate-expiry-poc-plt-ailves-xyz
+  # arn:aws:cloudwatch:eu-west-3:470201305353:alarm:acm-certificate-expiry-poc-plt-domain-xyz
 }
 
 output "sns_topic_arn" {
@@ -28,7 +27,7 @@ output "sns_topic_arn" {
 output "dashboard_url" {
   description = "URL to the CloudWatch dashboard"
   value       = var.enable_monitoring ? "https://console.aws.amazon.com/cloudwatch/home?region=${data.aws_region.current.id}#dashboards:name=${aws_cloudwatch_dashboard.certificate_monitoring[0].dashboard_name}" : null
-  # https://console.aws.amazon.com/cloudwatch/home?region=eu-west-3#dashboards:name=acm-certificates-poc-plt-ailves-xyz
+  # https://console.aws.amazon.com/cloudwatch/home?region=eu-west-3#dashboards:name=acm-certificates-poc-plt-domain-xyz
 }
 
 output "aws_cloudwatch_metric_alarm-certificate_critical_expiry" {

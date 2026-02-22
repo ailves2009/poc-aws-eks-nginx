@@ -1,5 +1,5 @@
 # /modules/vpc/sg.tf
-
+/*
 resource "aws_security_group" "apigw_to_nlb" {
   name        = "apigw-to-nlb-sg"
   description = "Allow traffic from API Gateway to NLB"
@@ -35,3 +35,4 @@ resource "aws_security_group" "apigw_to_nlb" {
     Created = "vpc/sg.tf"
   }
 }
+*/

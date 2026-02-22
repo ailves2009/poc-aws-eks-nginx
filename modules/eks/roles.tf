@@ -4,6 +4,49 @@ data "aws_iam_openid_connect_provider" "this" {
   url        = data.aws_eks_cluster.this.identity[0].oidc[0].issuer
   depends_on = [data.aws_eks_cluster.this]
 }
+# IAM Role for EKS Managed Node Group
+resource "aws_iam_role" "eks_node_role" {
+  name = "${var.cluster_name}-node-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "eks_worker_node_policy" {
+  role       = aws_iam_role.eks_node_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "eks_cni_policy" {
+  role       = aws_iam_role.eks_node_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+}
+
+resource "aws_iam_role_policy_attachment" "eks_container_registry_policy" {
+  role       = aws_iam_role.eks_node_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
+
+resource "aws_iam_role_policy_attachment" "eks_node_ssm" {
+  role       = aws_iam_role.eks_node_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_role_policy_attachment" "eks_ebs_csi_policy" {
+  role       = aws_iam_role.eks_node_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+}
+
 #############################
 # app_role
 # IAM Role for APP IRSA
@@ -428,6 +471,7 @@ resource "aws_iam_role_policy" "cluster_autoscaler" {
 # added to EBS CSI Driver addon in modules/eks/main.tf
 #############################
 resource "aws_iam_role" "ebs_csi_driver" {
+  count              = var.ebs_csi_driver_role != "" ? 1 : 0
   name               = var.ebs_csi_driver_role
   assume_role_policy = data.aws_iam_policy_document.ebs_csi_assume_role.json
 }
@@ -448,7 +492,8 @@ data "aws_iam_policy_document" "ebs_csi_assume_role" {
 }
 
 resource "aws_iam_role_policy_attachment" "ebs_csi_driver" {
-  role       = aws_iam_role.ebs_csi_driver.name
+  count      = var.ebs_csi_driver_role != "" ? 1 : 0
+  role       = aws_iam_role.ebs_csi_driver[0].name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
 }
 /*

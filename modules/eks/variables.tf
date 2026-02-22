@@ -1,11 +1,5 @@
 # /modules/eks/variables.tf
 
-variable "account" {
-  description = "AWS account ID where the EKS cluster will be deployed"
-  type        = string
-  default     = ""
-}
-
 variable "cluster_name" {
   description = "Name of the EKS cluster"
   type        = string
@@ -143,27 +137,10 @@ variable "cluster_autoscaler_role" {
   default     = ""
 }
 
-variable "tags" {
-  description = "A map of tags to assign to the resource"
-  type        = map(string)
-  default     = {}
-}
-
 variable "endpoint_public_access_cidrs" {
   description = "List of CIDR blocks that can access the EKS cluster endpoint publicly. Security best practice: Do not use 0.0.0.0/0"
   type        = list(string)
   default     = ["0.0.0.0/0"]
-}
-
-variable "asg_names" {
-  type    = list(string)
-  default = []
-}
-
-variable "generate_key" {
-  description = "If true, generate an SSH keypair and import public key to AWS"
-  type        = bool
-  default     = true
 }
 
 variable "key_name" {
@@ -171,3 +148,4 @@ variable "key_name" {
   type        = string
   default     = ""
 }
+

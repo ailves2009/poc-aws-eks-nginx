@@ -31,16 +31,6 @@ variable "vpc_cidr_block" {
   type        = string
 }
 
-variable "private_subnets" {
-  description = "List of CIDR blocks for private subnets"
-  type        = list(string)
-}
-
-variable "public_subnets" {
-  description = "List of CIDR blocks for public subnets"
-  type        = list(string)
-}
-
 variable "enable_nat_gateway" {
   description = "Enable NAT Gateway"
   type        = bool
@@ -51,6 +41,12 @@ variable "single_nat_gateway" {
   description = "Use a single NAT Gateway"
   type        = bool
   default     = true
+}
+
+variable "one_nat_gateway_per_az" {
+  description = "Create one NAT Gateway per Availability Zone"
+  type        = bool
+  default     = false
 }
 
 variable "enable_dns_hostnames" {
@@ -69,4 +65,3 @@ variable "manage_default_network_acl" {
   type        = bool
   default     = false
 }
-

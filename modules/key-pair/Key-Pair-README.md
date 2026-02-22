@@ -19,8 +19,8 @@ After `terraform apply` or `terragrunt apply` you can download the private key v
 
 ```bash
 # Terraform
-terraform output -raw private_key_pem > '~/.ssh/ae/5353-us-east-2.pem'
-chmod 600 ~/.ssh/ae/5353-us-east-2.pem
+terraform output -raw private_key_pem > '~/.ssh/ae/5353-eu-west-3.pem'
+chmod 600 ~/.ssh/ae/5353-eu-west-3.pem
 
 # Or with Terragrunt
 terragrunt output -raw private_key_pem > nyd-plt-key.pem

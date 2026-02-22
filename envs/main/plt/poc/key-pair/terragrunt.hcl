@@ -1,7 +1,7 @@
-# /envs/main/plt/poc/key-name/terragrunt.hcl
+# /envs/main/plt/poc/key-pair/terragrunt.hcl
 
 terraform {
-  source = "../../../../../modules/key-name"
+  source = "../../../../../modules/key-pair"
 }
 
 include {

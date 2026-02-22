@@ -11,8 +11,9 @@ data "aws_eks_cluster" "this" {
 }
 
 module "eks" {
-  source  = "terraform-aws-modules/eks/aws"
-  version = "~> 21.0"
+  source = "terraform-aws-modules/eks/aws"
+  # version = "~> 21.0"
+  version = "~>21.15.1"
 
   name               = var.cluster_name
   kubernetes_version = var.kubernetes_version
@@ -22,17 +23,19 @@ module "eks" {
   endpoint_private_access                  = var.endpoint_private_access
   enable_cluster_creator_admin_permissions = var.enable_cluster_creator_admin_permissions
 
-  addons = {
-    aws-ebs-csi-driver = {}
-    coredns            = {}
-    eks-pod-identity-agent = {
-      before_compute = true
-    }
-    kube-proxy = {}
-    vpc-cni = {
-      before_compute = true
-    }
-  }
+  addons = merge(
+    {
+      coredns = {}
+      eks-pod-identity-agent = {
+        before_compute = true
+      }
+      kube-proxy = {}
+      vpc-cni = {
+        before_compute = true
+      }
+    },
+    var.ebs_csi_driver_role != "" ? { "aws-ebs-csi-driver" = {} } : {}
+  )
 
   vpc_id                   = var.vpc_id
   subnet_ids               = var.subnet_ids
@@ -43,7 +46,6 @@ module "eks" {
   # EKS Managed Node Group(s)
   eks_managed_node_groups = {
     one = {
-      # Starting on 1.30, AL2023 is the default AMI type for EKS managed node groups
       ami_type                       = var.node_group_ami_type
       instance_types                 = var.instance_types
       use_latest_ami_release_version = var.use_latest_ami_release_version
@@ -69,51 +71,5 @@ module "eks" {
       }
     }
   }
-
-  tags = {
-    Environment = "plt"
-    Terraform   = "true"
-  }
 }
 
-resource "aws_iam_role" "eks_node_role" {
-  name = "${var.cluster_name}-node-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "eks_worker_node_policy" {
-  role       = aws_iam_role.eks_node_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
-}
-
-resource "aws_iam_role_policy_attachment" "eks_cni_policy" {
-  role       = aws_iam_role.eks_node_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
-}
-
-resource "aws_iam_role_policy_attachment" "eks_container_registry_policy" {
-  role       = aws_iam_role.eks_node_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-}
-
-resource "aws_iam_role_policy_attachment" "eks_node_ssm" {
-  role       = aws_iam_role.eks_node_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-}
-
-resource "aws_iam_role_policy_attachment" "eks_ebs_csi_policy" {
-  role       = aws_iam_role.eks_node_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
-}

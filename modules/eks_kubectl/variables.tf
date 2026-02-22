@@ -29,14 +29,4 @@ variable "eks_irsa_app_role" {
   description = "Name of the IAM role for APP IRSA"
   type        = string
 }
-/*
-variable "oidc_url" {
-  description = "OIDC URL for the EKS cluster"
-  type        = string
-}
 
-variable "oidc_provider_arn" {
-  description = "OIDC provider ARN for the EKS cluster"
-  type        = string
-}
-*/

@@ -40,14 +40,20 @@ EOF
 }
 
 inputs = {
-  cloudwatch_logs_retention_in_days = 365
-
-  vpc_name           = "poc-plt-vpc"
+  vpc_name           = "dmt-prd-eks"
   vpc_cidr_block     = "10.0.0.0/16"
-  private_subnets    = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-  public_subnets     = ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]
-  enable_nat_gateway = true
-  single_nat_gateway = true
+  
+  private_subnet_names = ["Private Subnet One", "Private Subnet Two"]
+  manage_default_network_acl    = false
+  manage_default_route_table    = false
+  manage_default_security_group = false
+  
+  enable_nat_gateway          = true
+  single_nat_gateway          = true
+  
   enable_dns_hostnames = true
-  manage_default_network_acl = false
+  enable_dns_support   = true
+  
+  cloudwatch_logs_retention_in_days = 365
 }
+

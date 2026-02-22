@@ -106,15 +106,17 @@ resource "kubernetes_service_account_v1" "cluster_autoscaler" {
 # SA for EBS-CSI Driver
 #################
 data "aws_iam_role" "ebs_csi_driver" {
-  name = var.ebs_csi_driver_role
+  count = var.ebs_csi_driver_role != "" ? 1 : 0
+  name  = var.ebs_csi_driver_role
 }
 
 resource "kubernetes_service_account_v1" "ebs_csi_driver" {
+  count = var.ebs_csi_driver_role != "" ? 1 : 0
   metadata {
     name      = "ebs-csi-driver-sa"
     namespace = "kube-system"
     annotations = {
-      "eks.amazonaws.com/role-arn" = data.aws_iam_role.ebs_csi_driver.arn
+      "eks.amazonaws.com/role-arn" = data.aws_iam_role.ebs_csi_driver[0].arn
     }
     labels = {
       "app.kubernetes.io/name"       = "ebs-csi-driver"

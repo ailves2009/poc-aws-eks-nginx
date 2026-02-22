@@ -1,3 +1,5 @@
+# modules/dns/variables.tf
+
 variable "domain_name" {
   description = "Domain name for the hosted zone (e.g. poc-plt.ailves.xyz)"
   type        = string

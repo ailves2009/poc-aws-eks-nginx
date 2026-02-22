@@ -48,11 +48,11 @@ dependency "vpc" {
   }
 }
 
-dependency "key-name" {
-  config_path = "../key-name"
+dependency "key-pair" {
+  config_path = "../key-pair"
 
   mock_outputs = {
-    key-name  = "mock-key_name"
+    key-pair  = "mock-key_name"
   }
 }
 
@@ -72,7 +72,7 @@ inputs = {
   ] */
 
   create_iam_role                     = true # Determines whether an IAM role is created for the cluster
-  ebs_csi_driver_role                 = "ebs-csi-driver-role"
+  # ebs_csi_driver_role                 = "ebs-csi-driver-role"
   eks_irsa_app_role                   = "eks-irsa-app-role"
   load_balancer_controller_role       = "load-balancer-controller-role"
   cluster_autoscaler_role             = "cluster-autoscaler-role"
@@ -95,5 +95,5 @@ inputs = {
   max_size                            = 5
   desired_size                        = 4
   
-  key_name                            = dependency.key-name.outputs.key_name
+  key_name                            = dependency.key-pair.outputs.key_name
 }

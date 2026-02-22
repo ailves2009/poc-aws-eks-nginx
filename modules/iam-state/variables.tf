@@ -34,4 +34,5 @@ variable "client" {
 variable "env" {
   description = "Environment identifier (e.g., dev, prod)"
   type        = string
+  default     = "dev"
 }

@@ -38,7 +38,7 @@ output "load_balancer_controller_role" {
 }
 
 output "ebs_csi_driver_role" {
-  value = aws_iam_role.ebs_csi_driver.name
+  value = try(aws_iam_role.ebs_csi_driver[0].name, "")
 }
 
 output "cluster_autoscaler_role" {
