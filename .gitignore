@@ -1,12 +1,14 @@
 # .gitignore for Terraform and Kubernetes project
+
 **/*.tfstate
 .terraform
 **/*.crt
 **/*.key
 **/*.csr
 **/*.pem
-data/
+docs/
 temp/
+data/
 **/eks-deploy
 *-secret.yaml
 !*-sealed-secret.yaml
