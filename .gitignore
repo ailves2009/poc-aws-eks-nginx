@@ -1,4 +1,4 @@
-.terragrunt-cache
+# .gitignore for Terraform and Kubernetes project
 **/*.tfstate
 .terraform
 **/*.crt
@@ -10,3 +10,48 @@ temp/
 **/eks-deploy
 *-secret.yaml
 !*-sealed-secret.yaml
+
+# Terraform lock files
+.terraform.lock.hcl
+**/.terraform.lock.hcl
+
+# Terragrunt cache
+.terragrunt-cache/
+**/.terragrunt-cache/
+
+# Local kubeconfig
+kubeconfig
+*.kubeconfig
+~/.kube/
+
+# Terraform local variables
+*.tfvars.local
+terraform.tfvars.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.env
+
+# Node
+node_modules/
+package-lock.json
+
+# Вложенные git repos
+.git/submodules/
+EOF
