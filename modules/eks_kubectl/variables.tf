@@ -5,11 +5,6 @@ variable "cluster_name" {
   type        = string
 }
 
-variable "load_balancer_controller_role" {
-  description = "IAM Role name for AWS Load Balancer Controller"
-  type        = string
-}
-
 variable "cw_observability_role" {
   description = "IAM Role name for CloudWatch Observability"
   type        = string

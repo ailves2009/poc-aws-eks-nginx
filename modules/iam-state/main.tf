@@ -1,4 +1,4 @@
-# /modules/iamstate/main.tf
+# /modules/iam-state/main.tf
 
 resource "aws_iam_role" "deploy_assume_role" {
   name               = var.cicd_role_name
@@ -16,6 +16,33 @@ data "aws_iam_policy_document" "deploy_assume_policy" {
     }
     actions = ["sts:AssumeRole"]
   }
+}
+# S3 policy
+resource "aws_iam_policy" "s3_state_access_policy" {
+  name        = "${var.cicd_role_name}-s3-state-access-policy"
+  description = "S3 state access permissions for CI/CD role"
+
+  policy = data.aws_iam_policy_document.s3_state_access_permissions.json
+}
+data "aws_iam_policy_document" "s3_state_access_permissions" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:ListBucket"
+    ]
+    resources = [
+      "arn:aws:s3:::${var.s3_terraform_state}",
+      "arn:aws:s3:::${var.s3_terraform_state}/*"
+    ]
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "deploy_assume_s3_state_policy_attachment" {
+  role       = aws_iam_role.deploy_assume_role.name
+  policy_arn = aws_iam_policy.s3_state_access_policy.arn
 }
 
 // deploy-core-policy
@@ -35,7 +62,26 @@ data "aws_iam_policy_document" "deploy_core_permissions" {
       "eks:DescribeCluster"
     ]
     resources = [
-      "arn:aws:eks:${var.region}:${var.account}:cluster/${var.env}-${var.client}-eks"
+      "arn:aws:eks:${var.region}:${var.account}:cluster/${var.cluster_name}"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "sns:CreateTopic",
+      "sns:TagResource",
+      "sns:ListTagsForResource",
+      "sns:Subscribe",
+      "sns:Unsubscribe",
+      "sns:Publish",
+      "sns:DeleteTopic",
+      "sns:GetTopicAttributes",
+      "sns:SetTopicAttributes",
+      "sns:GetSubscriptionAttributes"
+    ]
+    resources = [
+      "arn:aws:sns:${var.region}:${var.account}:*"
     ]
   }
 
@@ -46,9 +92,9 @@ data "aws_iam_policy_document" "deploy_core_permissions" {
     ]
     resources = [
       "arn:aws:iam::${var.account}:role/eks-irsa-app-role",
-      "arn:aws:iam::${var.account}:role/rds-app-access-role",
-      "arn:aws:sts::${var.account}:role/cicd-role",
-      "arn:aws:iam::${var.account}:role/aws-load-balancer-controller-role"
+      "arn:aws:iam::${var.account}:role/cicd-role",
+      "arn:aws:iam::${var.account}:role/aws-load-balancer-controller-role",
+      "arn:aws:iam::${var.account}:role/cluster-autoscaler-role"
 
     ]
   }
@@ -59,7 +105,7 @@ data "aws_iam_policy_document" "deploy_core_permissions" {
       "kms:UpdateAlias"
     ]
     resources = [
-      "arn:aws:kms:${var.region}:${var.account}:alias/eks/${var.env}-${var.client}-eks"
+      "arn:aws:kms:${var.region}:${var.account}:alias/eks/${var.cluster_name}"
     ]
   }
 

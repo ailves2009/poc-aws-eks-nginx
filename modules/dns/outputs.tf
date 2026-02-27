@@ -1,3 +1,5 @@
+# modules/dns/outputs.tf
+
 output "domain_name" {
   description = "DNS zone name"
   value       = aws_route53_zone.this.name
@@ -17,3 +19,4 @@ output "domain_arn" {
   description = "ARN of the hosted zone"
   value       = aws_route53_zone.this.arn
 }
+

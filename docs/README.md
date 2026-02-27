@@ -13,19 +13,41 @@ ls -la ~/Library/Caches/helm/repository
 
 AWS_PROFILE=sso-5353-us-east-2 aws eks update-kubeconfig --region eu-west-3 --name poc-plt-eks --kubeconfig ~/.kube/5353-poc-plt-kubeconfig
 
+TODO:
+Q: VPC таги — какие нужны?
+Разница между тегами:
+
+public_subnet_tags / private_subnet_tags — EKS использует эти теги для выбора подсетей
+kubernetes.io/role/elb — для AWS Load Balancer Controller (для публичных ELB)
+kubernetes.io/role/internal-elb — для внутренних Network Load Balancers
+Нужен ли тег kubernetes.io/cluster/${var.cluster_name} = "owned"`?
 
 
  iam-state
  s3-state
+
  iam
  vpc
  dns
- acm
  key-name
 
  eks
+ acm
+
  eks_kubectl
- monitoring
+ metrics
+ deploy
+ cluster-autoscaler
+
+
+ % AWS_PROFILE=ae-nyd-plt-target aws eks update-kubeconfig --region eu-west-3 --name poc-plt-eks --kubeconfig ~/.kube/poc-eks-kubeconfig
+ % k get ns
+NAME                STATUS   AGE
+amazon-cloudwatch   Active   12m
+default             Active   22m
+kube-node-lease     Active   22m
+kube-public         Active   22m
+kube-system         Active   22m
 
 
 to do:

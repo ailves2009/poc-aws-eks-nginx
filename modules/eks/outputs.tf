@@ -63,5 +63,9 @@ output "oidc_provider" {
 }
 
 output "eks_managed_node_groups_autoscaling_group_names" {
-  value = module.eks.eks_managed_node_groups_autoscaling_group_names  
+  value = module.eks.eks_managed_node_groups_autoscaling_group_names
+}
+
+output "cluster_endpoint" {
+  value = data.aws_eks_cluster.this.endpoint
 }

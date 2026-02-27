@@ -143,7 +143,7 @@ variable "endpoint_public_access_cidrs" {
   default     = ["0.0.0.0/0"]
 }
 
-variable "key_name" {
+variable "key_pair_name" {
   description = "SSH key name"
   type        = string
   default     = ""

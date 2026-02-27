@@ -10,7 +10,7 @@ include {
 
 dependency "iam-state" {
   config_path = "../iam-state"
-  
+
   mock_outputs = {
     deploy_role_arn = "mock-iam-output"
   }

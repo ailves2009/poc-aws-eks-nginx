@@ -24,14 +24,6 @@ terraform {
 EOF
 }
 
-dependency "dns" {
-  config_path ="../dns"
-
-  mock_outputs = {
-    domain_name = "mock-domain-name"
-  }
-}
-
 inputs = {
   enable_monitoring       = true
   alarm_email             = ["ailves2009@gmail.com"]

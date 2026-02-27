@@ -10,6 +10,15 @@ data "aws_eks_cluster" "this" {
   depends_on = [module.eks]
 }
 
+locals {
+  cluster_name = var.cluster_name
+  tags = {
+    Source = "eks/main.tf"
+  }
+}
+################################################################################
+# EKS Module
+################################################################################
 module "eks" {
   source = "terraform-aws-modules/eks/aws"
   # version = "~> 21.0"
@@ -58,7 +67,7 @@ module "eks" {
       iam_role_arn         = aws_iam_role.eks_node_role.arn
       iam_role_description = "IAM role for EKS managed node group with necessary permissions"
 
-      key_name = var.key_name
+      key_name = var.key_pair_name
       tags = {
         "k8s.io/cluster-autoscaler/enabled"             = "true"
         "k8s.io/cluster-autoscaler/${var.cluster_name}" = "owned"
@@ -71,5 +80,6 @@ module "eks" {
       }
     }
   }
+  tags = local.tags
 }
 

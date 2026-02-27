@@ -1,4 +1,4 @@
-# modules/key-name/variables.tf
+# modules/key-pair/variables.tf
 
 variable "generate_key" {
   description = "Whether to generate a new key pair"

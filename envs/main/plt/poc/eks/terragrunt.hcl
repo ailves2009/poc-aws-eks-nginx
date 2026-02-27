@@ -52,7 +52,7 @@ dependency "key-pair" {
   config_path = "../key-pair"
 
   mock_outputs = {
-    key-pair  = "mock-key_name"
+    key_pair_name  = "mock-key_pair_name"
   }
 }
 
@@ -84,7 +84,7 @@ inputs = {
   use_latest_ami_release_version      = true
   force_update_version                = false
 
-  namespace                           = "poc-plt"
+  namespace                           = "poc-eks"
   service_account_names               = ["app-front-sa", "app-be-sa"]
 
   cloudwatch_logs_retention_in_days   = 365
@@ -94,6 +94,6 @@ inputs = {
   min_size                            = 1
   max_size                            = 5
   desired_size                        = 4
-  
-  key_name                            = dependency.key-pair.outputs.key_name
+
+  key_pair_name                            = dependency.key-pair.outputs.key_pair_name
 }

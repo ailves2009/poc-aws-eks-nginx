@@ -2,15 +2,12 @@
 
   - Service-Accounts.tf - creates a K8s ServiceAccount in kube-system annotated with the
     IAM role created earlier (`aws_iam_role.cluster_autoscaler`) so IRSA works.
-  - Than manually we install the Cluster Autoscaler Helm chart and configures AWS  auto-discovery to use the cluster name and ASG tags.
+  - Than manually we install the Cluster Autoscaler Helm chart and configures AWS auto-discovery to use the cluster name and ASG tags.
 
 Note: If we'd like to use the Helm provider, it must be configured in the root module or via a provider block that can access the EKS cluster (for example in `modules/metrics/main.tf` we use `provider "helm" { kubernetes { config_path = "~/.kube/config" } }`).
 If you prefer the helm provider configured here, add an appropriate provider block.
 
-Note: installation of the Cluster Autoscaler Helm chart is intentionally left out
-of Terraform here to avoid coupling chart installation to the module-level Helm
-provider configuration. You can install the chart manually or via a root-level
-Helm release that has correct access to the cluster.
+Note: installation of the Cluster Autoscaler Helm chart is intentionally left out of Terraform here to avoid coupling chart installation to the module-level Helm provider configuration. You can install the chart manually or via a root-level Helm release that has correct access to the cluster.
 
 Example Helm command to run (replace ${CLUSTER_NAME} and ${REGION}):
 

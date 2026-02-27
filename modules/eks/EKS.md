@@ -31,7 +31,7 @@ inputs = {
 ...
 
 ### На OpenVPN сервере должен быть добавлен маршрут для клиента:
-ubuntu@ip-10-0-4-55:/etc/openvpn$ cat server.conf 
+ubuntu@ip-10-0-4-55:/etc/openvpn$ cat server.conf
 proto udp
 dev tun
 topology subnet
@@ -43,9 +43,9 @@ push "route 10.0.0.0 255.255.0.0"   # а это маршорут для клие
 
 На клиенте после подключения д.б.
 % netstat -rn | grep utun8
-10/16              10.9.0.1           UGSc                utun8       
-10.9/16            10.9.255.254       UGSc                utun8       
-10.9.0.1           10.9.255.254       UH                  utun8 
+10/16              10.9.0.1           UGSc                utun8
+10.9/16            10.9.255.254       UGSc                utun8
+10.9.0.1           10.9.255.254       UH                  utun8
 
 ### Так же в SG Control Plane (Cluster security group) дб добавлено разрешение:
 eks-cluster-sg-poc-plt-eks-393666524
@@ -64,20 +64,20 @@ IPv4 HTTPS TCP 443 10.0.4.55/32 (адрес OpenVPN server)
 #### Проверка маскарадинга:
 sudo iptables -t nat -L -n -v
 Chain PREROUTING (policy ACCEPT 0 packets, 0 bytes)
- pkts bytes target     prot opt in     out     source               destination         
+ pkts bytes target     prot opt in     out     source               destination
 
 Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
- pkts bytes target     prot opt in     out     source               destination         
+ pkts bytes target     prot opt in     out     source               destination
 
 Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
- pkts bytes target     prot opt in     out     source               destination         
+ pkts bytes target     prot opt in     out     source               destination
 
 Chain POSTROUTING (policy ACCEPT 3 packets, 268 bytes)
- pkts bytes target     prot opt in     out     source               destination         
+ pkts bytes target     prot opt in     out     source               destination
     0     0 SNAT       0    --  *      *       10.9.0.0/16          10.0.0.0/16          to:10.0.4.110
 
 
-###  После этого можно проверить доступ к API (Control Plane). WorkerNodes не слушат на 443 порту. 
+###  После этого можно проверить доступ к API (Control Plane). WorkerNodes не слушат на 443 порту.
 #### Узнать адрес Control Plane:
 aws eks describe-cluster --name poc-plt-eks --region me-central-1 --query 'cluster.endpoint' --output text --profile=ae-poc-plt-init
 https://9EF2C031E198666B2C3196663A098028.yl4.me-central-1.eks.amazonaws.com

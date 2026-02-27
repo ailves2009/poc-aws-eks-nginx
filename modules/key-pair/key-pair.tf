@@ -1,4 +1,4 @@
-# modules/key-name/key-pair.tf
+# modules/key-pair/key-pair.tf
 
 resource "tls_private_key" "access_key" {
   count     = var.generate_key ? 1 : 0

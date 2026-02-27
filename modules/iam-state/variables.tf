@@ -36,3 +36,13 @@ variable "env" {
   type        = string
   default     = "dev"
 }
+
+variable "cluster_name" {
+  description = "Name of the EKS cluster that will use the IAM role"
+  type        = string
+}
+
+variable "s3_terraform_state" {
+  description = "Name of the S3 bucket for Terraform state"
+  type        = string
+}

@@ -31,7 +31,6 @@ dependency "eks" {
     cluster_name                        = "mock-cluster_name"
     ebs_csi_driver_role                 = "mock-ebs-csi-driver-role"
     eks_irsa_app_role                   = "mock-eks-irsa-app-role"
-    load_balancer_controller_role       = "mock-load-balancer-controller-role"
     cluster_autoscaler_role             = "mock-cluster-autoscaler-role"
     cw_observability_role               = "mock-cw-observability-role"
   }
@@ -41,7 +40,6 @@ inputs = {
   cluster_name                        = dependency.eks.outputs.cluster_name
   ebs_csi_driver_role                 = dependency.eks.outputs.ebs_csi_driver_role
   eks_irsa_app_role                   = dependency.eks.outputs.eks_irsa_app_role
-  load_balancer_controller_role       = dependency.eks.outputs.load_balancer_controller_role
   cluster_autoscaler_role             = dependency.eks.outputs.cluster_autoscaler_role
   cw_observability_role               = dependency.eks.outputs.cw_observability_role
 }

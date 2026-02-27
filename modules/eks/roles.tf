@@ -4,7 +4,10 @@ data "aws_iam_openid_connect_provider" "this" {
   url        = data.aws_eks_cluster.this.identity[0].oidc[0].issuer
   depends_on = [data.aws_eks_cluster.this]
 }
+
+################################################################################
 # IAM Role for EKS Managed Node Group
+################################################################################
 resource "aws_iam_role" "eks_node_role" {
   name = "${var.cluster_name}-node-role"
 
@@ -20,6 +23,7 @@ resource "aws_iam_role" "eks_node_role" {
       }
     ]
   })
+  tags = local.tags
 }
 
 resource "aws_iam_role_policy_attachment" "eks_worker_node_policy" {
@@ -55,6 +59,7 @@ resource "aws_iam_role_policy_attachment" "eks_ebs_csi_policy" {
 resource "aws_iam_role" "irsa" {
   name               = var.eks_irsa_app_role
   assume_role_policy = data.aws_iam_policy_document.irsa_assume_role_policy.json
+  tags               = local.tags
 }
 
 data "aws_iam_policy_document" "irsa_assume_role_policy" {
@@ -111,11 +116,7 @@ resource "aws_iam_role" "aws_load_balancer_controller" {
       }
     ]
   })
-
-  tags = {
-    Cluster   = var.cluster_name
-    CreatedIn = "modules/eks/iam.tf"
-  }
+  tags = local.tags
 }
 
 resource "aws_iam_policy" "aws_load_balancer_controller" {
@@ -413,11 +414,12 @@ resource "aws_iam_role" "cluster_autoscaler" {
       Action = "sts:AssumeRoleWithWebIdentity"
       Condition = {
         StringEquals = {
-          "${replace(data.aws_iam_openid_connect_provider.this.url, "https://", "")}:sub" = "system:serviceaccount:kube-system:cluster-autoscaler"
+          "${replace(data.aws_eks_cluster.this.identity[0].oidc[0].issuer, "https://", "")}:sub" = "system:serviceaccount:kube-system:cluster-autoscaler"
         }
       }
     }]
   })
+  tags = local.tags
 }
 
 data "aws_iam_policy_document" "cluster_autoscaler" {
@@ -474,7 +476,9 @@ resource "aws_iam_role" "ebs_csi_driver" {
   count              = var.ebs_csi_driver_role != "" ? 1 : 0
   name               = var.ebs_csi_driver_role
   assume_role_policy = data.aws_iam_policy_document.ebs_csi_assume_role.json
+  tags               = local.tags
 }
+
 data "aws_iam_policy_document" "ebs_csi_assume_role" {
   statement {
     actions = ["sts:AssumeRoleWithWebIdentity"]
@@ -508,7 +512,7 @@ resource "aws_eks_addon" "ebs_csi_driver" {
 }
 */
 #############################
-# IAM Role for CloudWatch Agent 
+# IAM Role for CloudWatch Agent
 # IRSA role for CloudWatch Agent created in modules/eks/roles.tf
 # SA for AWS CloudWatch Agent created in modules/eks_kubectl/Service-Accounts.tf
 # added to CloudWatch Agent addon in modules/eks/main.tf
@@ -516,6 +520,7 @@ resource "aws_eks_addon" "ebs_csi_driver" {
 resource "aws_iam_role" "cw_observability" {
   name               = var.cw_observability_role
   assume_role_policy = data.aws_iam_policy_document.cw_observability_assume_role.json
+  tags               = local.tags
 }
 data "aws_iam_policy_document" "cw_observability_assume_role" {
   statement {

@@ -33,6 +33,5 @@ spec:
       selfHeal: true
 YAML
   )
-
   depends_on = [helm_release.argocd]
 }

@@ -279,5 +279,5 @@ This cluster supports two approaches for pod IAM access:
   4. Associate ServiceAccount with IAM Role using `aws_eks_pod_identity_association`.
   5. Pods automatically receive credentials via the agent.
 
-**POC approach:**  
+**POC approach:**
 Both methods can coexist in the same cluster. Some workloads use IRSA, some use Pod Identity, allowing comparison of usability, deployment workflow, and security.
