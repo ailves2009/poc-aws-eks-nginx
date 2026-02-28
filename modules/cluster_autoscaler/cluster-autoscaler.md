@@ -29,3 +29,14 @@ Make sure ASGs are tagged with:
   k8s.io/cluster-autoscaler/${CLUSTER_NAME}=owned
 and that the IAM role `aws_iam_role.cluster_autoscaler` is attached to the
 service account (created above) via the `eks.amazonaws.com/role-arn` annotation.
+
+
+----
+**Testing:**
+```bash
+# Watch autoscaler logs
+kubectl logs -n kube-system deployment/cluster-autoscaler -f | grep scale
+
+# List nodes
+kubectl get nodes
+```
