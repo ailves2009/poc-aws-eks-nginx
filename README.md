@@ -12,7 +12,6 @@
 8. [Ingress and Public Access](#5-ingress-and-public-access)
 9. [CNI Plugin Strategy](#-cni-plugin-strategy)
 10. [IAM for Pods (IRSA)](#iam-for-pods-poc)
-11. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -67,8 +66,6 @@ In an empty AWS account, perform the following:
 - **End-to-end HTTPS working:** `https://nginx.poc-eks.ailves2009.com` → HTTP/2 200 OK
 - GitHub repository with secret history cleaned
 - **CNI:** AWS VPC CNI (built-in EKS plugin, no Network Policies)
-
-### ⏳ Partially Implemented
 - **Cluster Autoscaler:** Deployed with scale-down parameters:
   - Min nodes: 1, Max nodes: 5
   - Scale-down-delay-after-add: 10 minutes
@@ -430,8 +427,8 @@ This cluster supports two approaches for pod IAM access (for demo purpose):
 **POC approach:**
 Both methods can coexist in the same cluster. Some workloads use IRSA, some use Pod Identity, allowing comparison of usability, deployment workflow, and security.
 
-
-### Verification
+---
+## Verification
 
 ```bash
 # 1. DNS resolution
