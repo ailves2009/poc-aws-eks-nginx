@@ -1,5 +1,21 @@
 # POC "AWS EKS Kubernetes Platform"
 
+## 📑 Table of Contents
+
+1. [Project Overview](#project-overview)
+2. [Task Definition](#task-definition)
+3. [Implementation Status](#implementation-status)
+4. [Base Infrastructure and IaC](#1-base-infrastructure-and-iac)
+5. [Networking and Perimeter Security](#2-networking-and-perimeter-security)
+6. [Kubernetes Control Plane](#3-kubernetes-control-plane)
+7. [Autoscaling](#4-autoscaling)
+8. [Ingress and Public Access](#5-ingress-and-public-access)
+9. [CNI Plugin Strategy](#-cni-plugin-strategy)
+10. [IAM for Pods (IRSA)](#iam-for-pods-poc)
+11. [Troubleshooting](#troubleshooting)
+
+---
+
 ## Project Overview
 
 This project demonstrates how to provision and operate a Kubernetes platform in a **clean AWS account** using **managed Amazon EKS** and modern Infrastructure as Code practices.
@@ -25,7 +41,7 @@ In an empty AWS account, perform the following:
   - Terraform / Terragrunt for AWS infrastructure
   - Helm for Kubernetes applications
 - **Managed Kubernetes:**
-  - Amazon EKS (Kubernetes 1.30)
+  - Amazon EKS (Kubernetes 1.33)
   - OIDC provider for pod IAM (IRSA)
 - **Load Balancing & DNS:**
   - AWS Load Balancer Controller (ALB v3.0.0)
@@ -41,20 +57,30 @@ In an empty AWS account, perform the following:
 
 ### ✅ Completed
 - VPC with public/private subnets across 3 AZs
-- EKS cluster (1.30) with OIDC provider for IRSA
-- Cluster Autoscaler for node-level scaling (2-5 nodes)
+- EKS cluster (1.33) with OIDC provider for IRSA
+- Cluster Autoscaler for node-level scaling (2-5 nodes, t3.medium spot)
 - Metrics Server for HPA metrics collection
 - AWS Load Balancer Controller v3.0.0
-- NGINX deployment with HPA (CPU target: 70%, 2-5 replicas)
+- NGINX deployment with HPA (CPU target: 50%, 2-5 replicas)
 - ACM wildcard certificate for `*.poc-eks.ailves2009.com` (ISSUED)
 - Route53 CNAME record for DNS resolution
 - **End-to-end HTTPS working:** `https://nginx.poc-eks.ailves2009.com` → HTTP/2 200 OK
 - Dynamic Kubernetes provider auth (exec plugin, no token expiration)
 - GitHub repository with secret history cleaned
+- **CNI:** AWS VPC CNI (built-in EKS plugin, no Network Policies)
 
-### ⏳ Not in Scope (Future Enhancements)
+### ⏳ Partially Implemented
+- **Cluster Autoscaler:** Deployed, but parameters not fully documented:
+  - Scale-down grace period: 10 minutes
+  - Min nodes: 2, Max nodes: 5
+  - See: `modules/cluster_autoscaler/` for Helm values
+
+### ❌ Not Implemented (Future Enhancements)
+- **Pod Disruption Budgets (PDB)** — Increases availability of critical pods
+- **Resource Quotas per namespace** — Prevents resource monopolization
+- **Separate node groups** (system vs application workloads)
+- **Network Policies** — Requires Calico, Cilium, or similar (AWS VPC CNI doesn't support)
 - Observability: Prometheus, Grafana, CloudWatch Logs
-- Network Policies / Service Mesh (Cilium, Istio)
 - Image security scanning
 - Admission controllers (OPA, Kyverno)
 - GitOps (ArgoCD, Flux)
@@ -115,12 +141,6 @@ modules/                               # Reusable Terraform modules
 └── key-pair/                          # EC2 key pair (debugging)
 ```
 
-Each module has:
-- `main.tf` — Terraform resources
-- `variables.tf` — Input variables  
-- `outputs.tf` — Output values
-- `README.md` — Module-specific documentation
-
 ### Remote State Management
 
 **Backend:** AWS S3 (encrypted at rest)  
@@ -133,13 +153,13 @@ Each module has:
 
 ### IaC Best Practices Implemented
 
-- ✅ **Version pinning:** Terraform providers, EKS Kubernetes version (1.30), Helm chart versions
+- ✅ **Version pinning:** Terraform providers, EKS Kubernetes version (1.33), Helm chart versions
 - ✅ **Modular design:** Each infrastructure component in separate reusable module
 - ✅ **Environment consolidation:** Two root environments (pred for bootstrap, main for infrastructure)
 - ✅ **Shared variables:** `envs/main/plt/poc/root.hcl` defines domain, region, cluster name
 - ✅ **Explicit dependencies:** Terragrunt `dependencies {}` blocks, clear deployment order
 - ✅ **Minimal IAM:** IRSA (IAM Roles for Service Accounts) for pod-level AWS API access
-- ✅ **Secret-free repository:** `.gitignore` excludes `*.tfvars.local`, `*.key`, `*.pem`, `data/`, `temp/`
+- ✅ **Secret-free repository:** `.gitignore` excludes `*.tfvars.local`, `*.key`, `*.pem`
 - ✅ **Per-module documentation:** Each module directory has README.md with specific details
 
 ---
@@ -156,7 +176,6 @@ Each module has:
   - No direct SSH access (or via AWS SSM only)
 - EKS Control Plane access:
   - Restricted to VPC
-  - Or limited CIDR ranges
 - Kubernetes Network Policies:
   - Calico or Cilium
 - VPC Flow Logs enabled
@@ -175,22 +194,22 @@ Each module has:
 - Managed Kubernetes:
   - Amazon EKS to reduce operational risk
 - Upgrade strategy:
-  - Control plane upgrades
-  - Rolling node group upgrades
+  - Control plane upgrades (not deployed yet)
+  - Rolling node group upgrades (not deployed yet)
 - Node groups:
   - Spread across at least 2–3 Availability Zones
   - Separate node groups for:
-    - system workloads
-    - application workloads
-- Pod Disruption Budgets for critical system components
-- Resource quotas and limits per namespace
+    - system workloads (not deployed yet)
+    - application workloads (not deployed yet)
+- Pod Disruption Budgets for critical system components (not deployed yet)
+- Resource quotas and limits per namespace (not deployed yet)
 
 ### Cluster Configuration
 
 | Parameter                 | Value              | Purpose                           |
 |---------------------------|--------------------|-----------------------------------|
 | **Cluster name**          | `poc-plt-eks`      | Identifier in AWS                 |
-| **Kubernetes version**    | 1.30               | Specified in `modules/eks/main.tf`|
+| **Kubernetes version**    | 1.33               | Specified in `modules/eks/main.tf`|
 | **Endpoint**              | Restricted to VPC  | Not publicly accessible           |
 | **OIDC provider**         | Enabled            | For IRSA (pod IAM roles)          |
 | **Control plane logging** | CloudWatch enabled | Audit/troubleshooting             |
@@ -267,7 +286,7 @@ resources:
 
 ## 5. Ingress and Public Access
 
-**Goal:** controlled and secure traffic entry. Expose NGINX via HTTPS with automatic ALB provisioning.
+**Goal:** controll and secure traffic entry. Expose NGINX via HTTPS with automatic ALB provisioning.
 
 - Ingress Controller:
   - AWS Load Balancer Controller (ALB)
@@ -295,15 +314,15 @@ resources:
            │ (DNS resolves to ALB public IP)
            ▼
 ┌──────────────────────────────────────────────────────┐
-│ ALB (Application Load Balancer)                       │
-│ - Listen: 80 (HTTP) + 443 (HTTPS with ACM cert)     │
+│ ALB (Application Load Balancer)                      │
+│ - Listen: 80 (HTTP) + 443 (HTTPS with ACM cert)      │
 │ - Health checks: /nginx_status                       │
 │ - Rule: route all to NGINX service                   │
 └──────────┬───────────────────────────────────────────┘
            │ (forward to Service:80 in-cluster)
            ▼
 ┌──────────────────────────────────────────────────────┐
-│ Kubernetes Service: nginx-demo-lb (ClusterIP, :80)  │
+│ Kubernetes Service: nginx-demo-lb (ClusterIP, :80)   │
 │ Selector: app=nginx                                  │
 └──────────┬───────────────────────────────────────────┘
            │ (load-balance across pods)
@@ -343,16 +362,52 @@ resources:
 
 The ALB hostname is automatically populated by ALB Controller → Route53 record is updated via Terraform.
 
+---
+
+## 🔌 CNI Plugin Strategy
+
+### Current: AWS VPC CNI
+
+**Advantages:**
+- ✅ AWS-managed (no additional operational burden)
+- ✅ Pods use VPC IP addresses directly (no overlay overhead)
+- ✅ Maximum performance, minimum latency
+- ✅ Native integration with VPC security groups
+
+**Limitations:**
+- ❌ **No Network Policies** — Cannot enforce L3/L4 rules between pods
+- ❌ No egress control
+- ❌ No service mesh capabilities
+
+### Alternative Option
+
+#### 2. Cilium (Best for Modern Kubernetes)
+**Add-ons needed:**
+- Cilium CNI (eBPF-based)
+- Hubble (observability)
+
+**Benefits over VPC CNI:**
+```
+✅ Network Policies + CiliumNetworkPolicy (L7-aware)
+✅ eBPF kernel magic = ultra-fast
+✅ Hubble observability dashboard
+✅ Cilium Operator for native service mesh
+✅ AWS-aware (understands security groups)
+❌ Highest operational complexity
+❌ Requires kernel 5.8+
+```
+---
+
 ## IAM for Pods (POC)
 
-This cluster supports two approaches for pod IAM access:
+This cluster supports two approaches for pod IAM access (for demo purpose):
 
 ### 1. IRSA (IAM Roles for Service Accounts)
 - Pods are associated with IAM Roles via Kubernetes ServiceAccount annotations.
 - Requires an OIDC provider configured for the EKS cluster.
 - Uses AWS STS `AssumeRoleWithWebIdentity`.
 - Steps:
-  1. Enable OIDC provider for the cluster.
+  1. Use OIDC provider deployed in the cluster.
   2. Create IAM Role with trust policy for the ServiceAccount.
   3. Attach necessary IAM Policy to the Role.
   4. Annotate the ServiceAccount with the IAM Role ARN.
@@ -394,9 +449,7 @@ Subject: CN=*.poc-eks.ailves2009.com
 Issuer: Amazon RSA 2048 M03
 ```
 
----
-
-## 6. Observability (not deployed yet)
+## 📚 Future Enhancements (not deployed yet)
 
 **Goal:** no production system exists without visibility.
 

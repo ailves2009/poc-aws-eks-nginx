@@ -64,13 +64,6 @@ inputs = {
   endpoint_private_access                   = true
   enable_cluster_creator_admin_permissions  = true
 
-  /* endpoint_public_access_cidrs           = [
-    # Security: Restrict EKS API server access to specific IP ranges
-    "5.172.36.89/32",       # Orion
-    "213.196.99.104/32",    # Nikolas
-    "109.245.37.26/32"     # Yettel
-  ] */
-
   create_iam_role                     = true # Determines whether an IAM role is created for the cluster
   # ebs_csi_driver_role                 = "ebs-csi-driver-role"
   eks_irsa_app_role                   = "eks-irsa-app-role"

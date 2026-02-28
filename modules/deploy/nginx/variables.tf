@@ -49,3 +49,21 @@ variable "certificate_arn" {
   type        = string
   default     = ""
 }
+
+variable "hpa_average_utilization" {
+  description = "Average CPU utilization for Horizontal Pod Autoscaler"
+  type        = number
+  default     = 75
+}
+
+variable "hpa_min_replicas" {
+  description = "Minimum number of replicas for Horizontal Pod Autoscaler"
+  type        = number
+  default     = 2
+}
+
+variable "hpa_max_replicas" {
+  description = "Maximum number of replicas for Horizontal Pod Autoscaler"
+  type        = number
+  default     = 5
+}

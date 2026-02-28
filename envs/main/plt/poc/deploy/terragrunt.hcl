@@ -85,4 +85,7 @@ inputs = {
   kube_ca                 = dependency.eks.outputs.cluster_ca_certificate
   kube_token              = ""
   certificate_arn         = dependency.acm.outputs.wildcard_certificate_arn
+  hpa_average_utilization = 75
+  hpa_min_replicas        = 2
+  hpa_max_replicas        = 5
 }

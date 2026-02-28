@@ -13,8 +13,8 @@ resource "kubernetes_horizontal_pod_autoscaler_v2" "nginx" {
       name        = kubernetes_deployment_v1.nginx.metadata[0].name
     }
 
-    min_replicas = 1
-    max_replicas = 5
+    min_replicas = var.hpa_min_replicas
+    max_replicas = var.hpa_max_replicas
 
     metric {
       type = "Resource"
@@ -22,7 +22,7 @@ resource "kubernetes_horizontal_pod_autoscaler_v2" "nginx" {
         name = "cpu"
         target {
           type                = "Utilization"
-          average_utilization = 50
+          average_utilization = var.hpa_average_utilization
         }
       }
     }
