@@ -1,15 +1,5 @@
 # /modules/acm/main.tf
 
-# Provider for us-east-1 ( for CloudFront cerificates)
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 4.0.0"
-    }
-  }
-}
-
 # Main ACM certificate for the domain and wildcard
 resource "aws_acm_certificate" "wildcard" {
   domain_name               = "*.${var.domain_name}"
