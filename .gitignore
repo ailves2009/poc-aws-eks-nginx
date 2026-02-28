@@ -6,7 +6,7 @@
 **/*.key
 **/*.csr
 **/*.pem
-docs/
+docs/*~
 temp/
 data/
 **/eks-deploy
