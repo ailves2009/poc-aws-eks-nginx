@@ -58,7 +58,7 @@ In an empty AWS account, perform the following:
 ### ✅ Completed
 - VPC with public/private subnets across 3 AZs
 - EKS cluster (1.33) with OIDC provider for IRSA
-- Cluster Autoscaler for node-level scaling (2-5 nodes, t3.medium spot)
+- Cluster Autoscaler for node-level scaling (1-5 nodes, t3.small on-demand)
 - Metrics Server for HPA metrics collection
 - AWS Load Balancer Controller v3.0.0
 - NGINX deployment with HPA (CPU target: 70%, 2-5 replicas)
@@ -69,21 +69,24 @@ In an empty AWS account, perform the following:
 - **CNI:** AWS VPC CNI (built-in EKS plugin, no Network Policies)
 
 ### ⏳ Partially Implemented
-- **Cluster Autoscaler:** Deployed, but parameters not fully documented:
-  - Scale-down grace period: 10 minutes
-  - Min nodes: 2, Max nodes: 5
+- **Cluster Autoscaler:** Deployed with scale-down parameters:
+  - Min nodes: 1, Max nodes: 5
+  - Scale-down-delay-after-add: 10 minutes
+  - Scale-down-enabled: true
 
-### ❌ Not Implemented (Future Enhancements)
-- **Pod Disruption Budgets (PDB)** — Increases availability of critical pods
-- **Resource Quotas per namespace** — Prevents resource monopolization
-- **Separate node groups** (system vs application workloads)
+### ⚠️ Not Implemented (Quick Fixes — Near-Term)
+- **Pod Disruption Budgets (PDB)** — Increases availability of critical pods during updates
+- **Resource Quotas per namespace** — Prevents resource monopolization by single workloads
+- **Separate node groups** (system vs application workloads) — Better resource isolation and scaling
+
+### ❌ Not Implemented (Future Enhancements — Advanced)
 - **Network Policies** — Requires Calico, Cilium, or similar (AWS VPC CNI doesn't support)
-- Observability: Prometheus, Grafana, CloudWatch Logs
-- Network Policies / Service Mesh (Cilium, Istio)
-- Image security scanning
-- Admission controllers (OPA, Kyverno)
-- GitOps (ArgoCD, Flux)
-- Backup/Disaster recovery (Velero)
+- **Observability:** Prometheus, Grafana, CloudWatch Logs integration
+- **Service Mesh** — Cilium, Istio for advanced networking
+- **Image security scanning** — Harbor, Trivy, or cloud provider integrations
+- **Admission controllers** — OPA/Kyverno for policy enforcement
+- **GitOps** — ArgoCD, Flux for automated deployments
+- **Backup/Disaster recovery** — Velero for persistent data protection
 
 ---
 
@@ -179,29 +182,30 @@ modules/                               # Reusable Terraform modules
   - Calico or Cilium
 - VPC Flow Logs enabled
 
-### Not Implemented in POC
+### Deferred for This POC (Networking)
 
-- VPC Flow Logs (can be enabled for audit)
-- Network Policies (Cilium/Calico)
-- Egress firewalling (all egress allowed via NAT GW)
+- **VPC Flow Logs** — Can be enabled for audit and troubleshooting
+- **Egress control** — Currently all egress allowed via NAT Gateway (would need Egress-only NAT or Proxy)
+- **Network Policies** — Requires CNI change to Cilium/Calico
 ---
 
 ## 3. Kubernetes Control Plane
 
 **Goal:** managed, stable control plane with secure authentication.
 
-- Managed Kubernetes:
-  - Amazon EKS to reduce operational risk
-- Upgrade strategy:
-  - Control plane upgrades (not deployed yet)
-  - Rolling node group upgrades (not deployed yet)
-- Node groups:
-  - Spread across at least 2–3 Availability Zones
-  - Separate node groups for:
-    - system workloads (not deployed yet)
-    - application workloads (not deployed yet)
-- Pod Disruption Budgets for critical system components (not deployed yet)
-- Resource quotas and limits per namespace (not deployed yet)
+### Deployed
+
+- **Managed Kubernetes:** Amazon EKS (v1.33) to reduce operational risk
+- **High availability:** Spread across 3 Availability Zones (eu-west-3a, 3b, 3c)
+- **Authentication:** IAM via OIDC provider (IRSA for pod IAM roles)
+- **Control plane logging:** CloudWatch Logs enabled for audit trail
+
+### Deferred (Future Improvements)
+
+- **Upgrade strategy:** Control plane and rolling node group upgrades
+- **Separate node groups:** Dedicated groups for system vs application workloads
+- **Pod Disruption Budgets (PDB):** For critical system components
+- **Resource quotas and limits:** Per-namespace resource guardrails
 
 ### Cluster Configuration
 
@@ -246,9 +250,9 @@ modules/                               # Reusable Terraform modules
 |---------------------|----------------------------|--------------------------------------|
 | **Trigger**         | Pending unschedulable pods | Scales up when nodes cannot fit pods |
 | **Scale down**      | Unused nodes after 10 min  | Graceful drain of workloads          |
-| **Min nodes**       |                          2 | Minimum for HA                       |
+| **Min nodes**       |                          1 | Minimum for HA                       |
 | **Max nodes**       |                          5 | Cost limit                           |
-| **Instance type**   | `t3.medium` (spot)         | Cost-effective for POC               |
+| **Instance type**   | `t3.small`                 | On-demand                            |
 | **IAM permissions** | EC2 describe + ASG scaling | IRSA role:`eks-cluster-autoscaler-role` |
 
 ### Pod Autoscaling
