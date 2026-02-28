@@ -1,19 +1,12 @@
 # modules/cluster_autoscaler/main.tf
 
 # Configure Kubernetes provider for EKS cluster
-/*
-provider "kubernetes" {
-  host                   = var.kube_host
-  cluster_ca_certificate = var.kube_ca
-  token                  = var.kube_token
-}
-*/
 #################
 # SA for cluster_autoscaler
 #################
 /*
   - creates a Kubernetes ServiceAccount in kube-system annotated with the
-    IAM role created earlier (`aws_iam_role.cluster_autoscaler`) so IRSA works.
+    IAM role.
   - deploys the Cluster Autoscaler using pure Terraform resources and configures
     AWS auto-discovery to use the cluster name and ASG tags.
 */
@@ -23,7 +16,7 @@ data "aws_iam_role" "cluster_autoscaler_role" {
 
 resource "kubernetes_service_account_v1" "cluster_autoscaler_sa" {
   metadata {
-    name      = "cluster-autoscaler-sa"
+    name      = "cluster-autoscaler"
     namespace = "kube-system"
     annotations = {
       "eks.amazonaws.com/role-arn" = data.aws_iam_role.cluster_autoscaler_role.arn
@@ -238,6 +231,8 @@ resource "kubernetes_deployment_v1" "cluster_autoscaler" {
             "--node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,k8s.io/cluster-autoscaler/${var.cluster_name}",
             "--balance-similar-node-groups",
             "--skip-nodes-with-system-pods=false",
+            "--scale-down-enabled=true",
+            "--scale-down-delay-after-add=10m",
           ]
           resources {
             limits = {

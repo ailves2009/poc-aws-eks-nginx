@@ -37,6 +37,10 @@ terraform {
       source  = "hashicorp/aws"
       version = ">= 5.0.0"
     }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 3.0"
+    }
   }
 }
 EOF
@@ -47,9 +51,14 @@ generate "providers_config" {
   if_exists = "overwrite"
   contents  = <<EOF
 provider "kubernetes" {
-    host                      = var.kube_host
-    cluster_ca_certificate    = var.kube_ca
-    token                     = var.kube_token
+  host                   = var.kube_host
+  cluster_ca_certificate = var.kube_ca
+
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    args        = ["eks", "get-token", "--cluster-name", var.cluster_name, "--region", "eu-west-3"]
+  }
 }
 EOF
 }
