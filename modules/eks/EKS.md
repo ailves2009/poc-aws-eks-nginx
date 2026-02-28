@@ -143,3 +143,29 @@ Is it possible to avoid creating one?
 - it violates the least privilege principle
 - the driver gets all node rights, not just the required EBS rights
 - auditing/security compliance is more complicated
+
+
+#######
+### Authentication & Token Management
+
+**For CLI/Terraform (Human operators):**
+```bash
+aws eks update-kubeconfig --region eu-west-3 --name poc-plt-eks
+# → Stores AWS SigV4 auth in kubeconfig
+```
+
+**For Terraform Kubernetes provider:**
+```hcl
+provider "kubernetes" {
+  host                   = var.cluster_endpoint
+  cluster_ca_certificate = base64decode(var.cluster_ca)
+  
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    args        = ["eks", "get-token", "--cluster-name", var.cluster_name]
+  }
+}
+```
+
+**Why exec auth?** Static tokens expire after 15 minutes. Using `aws eks get-token` ensures fresh tokens for each `terraform apply`.

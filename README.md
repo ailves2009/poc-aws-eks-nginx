@@ -19,45 +19,98 @@ In an empty AWS account, perform the following:
 3. Deploy **NGINX** with **pod autoscaling**
 4. Make NGINX **publicly accessible**
 
-### Tooling Constraints
+### Tooling Stack
 
-- Infrastructure as Code:
-  - **Terraform / Terragrunt**
-  - **Helm** for Kubernetes applications
-- Managed Kubernetes:
-  - **Amazon EKS**
+- **Infrastructure as Code:**
+  - Terraform / Terragrunt for AWS infrastructure
+  - Helm for Kubernetes applications
+- **Managed Kubernetes:**
+  - Amazon EKS (Kubernetes 1.30)
+  - OIDC provider for pod IAM (IRSA)
+- **Load Balancing & DNS:**
+  - AWS Load Balancer Controller (ALB v3.0.0)
+  - ACM for HTTPS certificates
+  - Route53 for DNS management
+- **Autoscaling:**
+  - Cluster Autoscaler (node level)
+  - Horizontal Pod Autoscaler (pod level, CPU-based)
 
 ---
 
-## Resulting Architecture and Design Principles
+## Implementation Status
 
-The implementation follows a layered approach aligned with production-ready best practices.
+### ✅ Completed
+- VPC with public/private subnets across 3 AZs
+- EKS cluster (1.30) with OIDC provider for IRSA
+- Cluster Autoscaler for node-level scaling (2-5 nodes)
+- Metrics Server for HPA metrics collection
+- AWS Load Balancer Controller v3.0.0
+- NGINX deployment with HPA (CPU target: 70%, 2-5 replicas)
+- ACM wildcard certificate for `*.poc-eks.ailves2009.com` (ISSUED)
+- Route53 CNAME record for DNS resolution
+- **End-to-end HTTPS working:** `https://nginx.poc-eks.ailves2009.com` → HTTP/2 200 OK
+- Dynamic Kubernetes provider auth (exec plugin, no token expiration)
+- GitHub repository with secret history cleaned
+
+### ⏳ Not in Scope (Future Enhancements)
+- Observability: Prometheus, Grafana, CloudWatch Logs
+- Network Policies / Service Mesh (Cilium, Istio)
+- Image security scanning
+- Admission controllers (OPA, Kyverno)
+- GitOps (ArgoCD, Flux)
+- Backup/Disaster recovery (Velero)
 
 ---
 
 ## 1. Base Infrastructure and IaC
 
-**Goal:** reproducibility, change control, and secure defaults.
+**Goal:** reproducible, version-controlled infrastructure with minimal blast radius.
 
-- Declarative IaC only:
-  - Terraform / OpenTofu
-- Remote state management:
-  - S3 backend
-  - DynamoDB state locking
-- Modular structure:
-  - VPC / networking
-  - EKS cluster
-  - Node groups / autoscaling
-  - Kubernetes addons
-- Clear environment separation:
-  - `dev`, `stage`, `prod`
-  - Implemented via Terraform workspaces or Terragrunt
-- Version pinning:
-  - Terraform providers
-  - Kubernetes version
-  - AMI / node images
-- Minimal IAM permissions:
-  - Principle of least privilege applied everywhere
+### Layer Structure
+
+```
+modules/                                # Reusable Terraform modules
+├── vpc/                               # VPC, subnets, security groups
+├── eks/                               # EKS cluster + OIDC provider
+├── eks_kubectl/                       # In-cluster resources (RBAC, CRDs)
+├── acm/                               # ACM certificate management
+├── dns/                               # Route53 records
+├── alb/                               # ALB + ALB Controller (Helm)
+├── deploy/nginx/                      # NGINX deployment + service + ingress
+├── iam/                               # IAM policies and roles
+├── key-pair/                          # EC2 key pair (debugging)
+└── monitoring/                        # Metrics Server (HPA support)
+
+envs/
+└── main/plt/poc/                      # Platform layer, POC environment
+    ├── root.hcl                       # Shared variables (domain, region, cluster name)
+    ├── vpc/terragrunt.hcl
+    ├── eks/terragrunt.hcl
+    ├── acm/terragrunt.hcl
+    ├── dns/terragrunt.hcl
+    ├── alb/terragrunt.hcl
+    ├── deploy/terragrunt.hcl
+    ├── eks_kubectl/terragrunt.hcl
+    └── monitoring/terragrunt.hcl
+```
+
+### Remote State Management
+
+| Component | Backend | Locking |
+|-----------|---------|----------|
+| Terraform state | S3 (encrypted at rest) | DynamoDB |
+| IaC roles | Created by `envs/pred/plt/poc/iam-state/` | Manual |
+| State bucket | Created by `envs/pred/plt/poc/s3-state/` | Manual |
+
+### IaC Best Practices Implemented
+
+- ✅ **Version pinning:** Terraform providers, EKS Kubernetes version (1.30), Helm chart versions
+- ✅ **Modular design:** Each infrastructure component in separate module
+- ✅ **Environment consolidation:** Single Terragrunt root per environment (`root.hcl`)
+- ✅ **Local variables:** Shared domain, region, cluster name in `root.hcl`
+- ✅ **Explicit dependencies:** Terragrunt `dependencies {}` blocks, clear deployment order
+- ✅ **Minimal IAM:** IRSA (IAM Roles for Service Accounts) for pod-level AWS API access
+- ✅ **Secret-free repository:** `.gitignore` excludes `*.tfvars.local`, `*.key`, `*.pem`, `data/`, `temp/`
 
 ---
 
@@ -78,11 +131,16 @@ The implementation follows a layered approach aligned with production-ready best
   - Calico or Cilium
 - VPC Flow Logs enabled
 
+### Not Implemented in POC
+
+- VPC Flow Logs (can be enabled for audit)
+- Network Policies (Cilium/Calico)
+- Egress firewalling (all egress allowed via NAT GW)
 ---
 
 ## 3. Kubernetes Control Plane
 
-**Goal:** stability and operational manageability.
+**Goal:** managed, stable control plane with secure authentication.
 
 - Managed Kubernetes:
   - Amazon EKS to reduce operational risk
@@ -97,15 +155,36 @@ The implementation follows a layered approach aligned with production-ready best
 - Pod Disruption Budgets for critical system components
 - Resource quotas and limits per namespace
 
+### Cluster Configuration
+
+| Parameter | Value | Purpose |
+|-----------|-------|----------|
+| **Cluster name** | `poc-plt-eks` | Identifier in AWS |
+| **Kubernetes version** | 1.30 | Specified in `modules/eks/main.tf` |
+| **Endpoint** | Restricted to VPC | Not publicly accessible |
+| **OIDC provider** | Enabled | For IRSA (pod IAM roles) |
+| **Control plane logging** | CloudWatch enabled | Audit/troubleshooting |
+| **Availability Zones** | 3 (eu-west-3a, 3b, 3c) | High availability |
+
+
+### NAmespaces and SAs
+
+| Namespace     | Purpose.        | Service Accounts               |
+|---------------|-----------------|--------------------------------|
+| `kube-system` | Cluster add-ons | `cluster-autoscaler`,
+                                    `aws-load-balancer-controller`,
+                                    `metrics-server`               |
+| `nginx`       | App workload    | `default` (NGINX pods)         |
+| `default`     | Rarely used | — |
+
 ---
 
 ## 4. Autoscaling
-
-**Goal:** scalable infrastructure without manual intervention.
+**Goal:** dynamic scaling based on actual workload demand.
 
 ### Node Autoscaling
 
-- Cluster Autoscaler or Karpenter
+- Cluster Autoscaler
 - Separate node pools:
   - `system`
   - `workloads`
@@ -121,24 +200,255 @@ The implementation follows a layered approach aligned with production-ready best
   - CPU and memory metrics
   - Optional custom metrics
 - Resource requests and limits are mandatory
-- Minimum replicas greater than 1
+- Minimum replicas greater than 1### Node Autoscaling (Cluster Autoscaler)
+
+**Deployment:** `kube-system/cluster-autoscaler`
+
+| Parameter           | Value                      | Notes                                |
+|---------------------|----------------------------|--------------------------------------|
+| **Trigger**         | Pending unschedulable pods | Scales up when nodes cannot fit pods |
+| **Scale down**      | Unused nodes after 10 min  | Graceful drain of workloads          |
+| **Min nodes**.      |                          2 | Minimum for HA                       |
+| **Max nodes**       |                          5 | Cost limit                           |
+| **Instance type**   | `t3.medium` (spot)         | Cost-effective for POC               |
+| **IAM permissions** | EC2 describe + ASG scaling | IRSA role:`eks-cluster-autoscaler-role` |
+
+**Testing:**
+```bash
+# Watch autoscaler logs
+kubectl logs -n kube-system deployment/cluster-autoscaler -f | grep scale
+
+# List nodes
+kubectl get nodes
+```
+
+### Pod Autoscaling (Horizontal Pod Autoscaler)
+
+**Target:** NGINX Deployment in `nginx` namespace
+
+| Parameter | Value | Notes |
+|-----------|-------|-------|
+| **Metric** | CPU utilization | From Metrics Server |
+| **Target CPU** | 70% | Scale up when > 70% |
+| **Min replicas** | 2 | Always run 2+ for HA |
+| **Max replicas** | 5 | Cost/scale limit |
+| **Scale-up period** | 30 seconds | Fast response |
+| **Scale-down period** | 300 seconds | Gradual reduction |
+
+**Metrics Source:** Metrics Server (installed via `monitoring` module)
+
+**Testing:**
+```bash
+# Check HPA status
+kubectl get hpa -n nginx
+
+# Watch pods scaling
+kubectl get pods -n nginx -w
+
+# Load test (generate CPU load)
+kubectl run -it --rm load-generator --image=busybox /bin/sh
+# Then inside:
+# > while sleep 0.01; do wget -q -O- http://nginx:80; done
+```
+
+### Prerequisites for Both
+
+✅ Pod `resources.requests` must be set (HPA targets % of requests)
+```yaml
+resources:
+  requests:
+    cpu: 100m      # HPA calculates 70% of this
+    memory: 128Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+```
+---
+### Node Autoscaling (Cluster Autoscaler)
+
+**Deployment:** `kube-system/cluster-autoscaler`
+
+| Parameter | Value | Notes |
+|-----------|-------|-------|
+| **Trigger** | Pending unschedulable pods | Scales up when nodes cannot fit pods |
+| **Scale down** | Unused nodes after 10 min | Graceful drain of workloads |
+| **Min nodes** | 2 | Minimum for HA |
+| **Max nodes** | 5 | Cost limit |
+| **Instance type** | `t3.medium` (spot) | Cost-effective for POC |
+| **IAM permissions** | EC2 describe + ASG scaling | IRSA role: `eks-cluster-autoscaler-role` |
+
+**Testing:**
+```bash
+# Watch autoscaler logs
+kubectl logs -n kube-system deployment/cluster-autoscaler -f | grep scale
+
+# List nodes
+kubectl get nodes
+```
+
+### Pod Autoscaling (Horizontal Pod Autoscaler)
+
+**Target:** NGINX Deployment in `nginx` namespace
+
+| Parameter | Value | Notes |
+|-----------|-------|-------|
+| **Metric** | CPU utilization | From Metrics Server |
+| **Target CPU** | 70% | Scale up when > 70% |
+| **Min replicas** | 2 | Always run 2+ for HA |
+| **Max replicas** | 5 | Cost/scale limit |
+| **Scale-up period** | 30 seconds | Fast response |
+| **Scale-down period** | 300 seconds | Gradual reduction |
+
+**Metrics Source:** Metrics Server (installed via `monitoring` module)
+
+**Testing:**
+```bash
+# Check HPA status
+kubectl get hpa -n nginx
+
+# Watch pods scaling
+kubectl get pods -n nginx -w
+
+# Load test (generate CPU load)
+kubectl run -it --rm load-generator --image=busybox /bin/sh
+# Then inside:
+# > while sleep 0.01; do wget -q -O- http://nginx:80; done
+```
+
+### Prerequisites for Both
+
+✅ Pod `resources.requests` must be set (HPA targets % of requests)
+```yaml
+resources:
+  requests:
+    cpu: 100m      # HPA calculates 70% of this
+    memory: 128Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+```
 
 ---
 
+
+
+---
+
+
+
 ## 5. Ingress and Public Access
 
-**Goal:** controlled and secure traffic entry.
+**Goal:** expose NGINX via HTTPS with automatic ALB provisioning.
 
-- Ingress Controller:
-  - AWS Load Balancer Controller (ALB)
-- HTTPS:
-  - ACM-managed certificates
-  - TLS termination at the ALB
-- Correctly configured health checks
-- Rate limiting where applicable
-- Clear separation between:
-  - internal services
-  - public services
+### End-to-End Traffic Flow
+
+```
+┌─────────────┐
+│  Internet   │ HTTPS (port 443)
+└──────┬──────┘
+       │ (TCP SYN)
+       ▼
+┌──────────────────────────────────────────────────────┐
+│ Route53: nginx.poc-eks.ailves2009.com                │
+│ Type: CNAME → ALB hostname (auto-created)            │
+└──────────┬───────────────────────────────────────────┘
+           │ (DNS resolves to ALB public IP)
+           ▼
+┌──────────────────────────────────────────────────────┐
+│ ALB (Application Load Balancer)                       │
+│ - Listen: 80 (HTTP) + 443 (HTTPS with ACM cert)     │
+│ - Health checks: /nginx_status                       │
+│ - Rule: route all to NGINX service                   │
+└──────────┬───────────────────────────────────────────┘
+           │ (forward to Service:80 in-cluster)
+           ▼
+┌──────────────────────────────────────────────────────┐
+│ Kubernetes Service: nginx-demo-lb (ClusterIP, :80)  │
+│ Selector: app=nginx                                  │
+└──────────┬───────────────────────────────────────────┘
+           │ (load-balance across pods)
+           ▼
+┌──────────────────────────────────────────────────────┐
+│ NGINX Pods (replica 1, 2, 3...)                      │
+│ Image: nginx:1.25-alpine                             │
+│ Port: 80 (HTTP inside cluster)                       │
+│ HPA: 2-5 replicas (CPU-based)                        │
+└──────────────────────────────────────────────────────┘
+```
+
+### AWS Load Balancer Controller v3.0.0
+
+**Deployment:** `kube-system/aws-load-balancer-controller` (Helm chart)
+
+| Component | Configuration |
+|-----------|---------------|
+| **Replicas** | 2 (HA) |
+| **IRSA** | Yes, role: `eks-alb-controller-role` |
+| **Permissions** | EC2 (describe instances), ELBv2 (manage ALBs) |
+| **Watch timeout** | Default 15s |
+
+**Key annotation on Ingress:**
+```yaml
+metadata:
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+```
+
+### HTTPS with ACM Certificate
+
+**Certificate Details:**
+- **Domain:** `*.poc-eks.ailves2009.com` + `poc-eks.ailves2009.com`
+- **Issued by:** AWS Certificate Manager
+- **Validation method:** DNS (Route53 CNAME challenge)
+- **Status:** ✅ ISSUED (not expired)
+- **Auto-renewal:** Enabled
+
+**Ingress Annotations for HTTPS:**
+```yaml
+alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+alb.ingress.kubernetes.io/ssl-redirect: "443"           # Plain string (not JSON!)
+alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-west-3:470201305353:certificate/xxxxx
+alb.ingress.kubernetes.io/healthcheck-path: /
+alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
+```
+
+**Note on annotation format:** ALB Controller v3.0.0 expects `ssl-redirect` as plain string `"443"`, not JSON array `[{...}]`. Earlier versions had different syntax; this was a key debugging point.
+
+### DNS with Route53
+
+**Hosted Zone:** `poc-eks.ailves2009.com` (created manually)
+
+**Ingress DNS Record:**
+```
+Name: nginx.poc-eks.ailves2009.com
+Type: CNAME
+Value: k8s-nginx-nginxalb-3aebd75766-1319654008.eu-west-3.elb.amazonaws.com
+TTL: 300
+```
+
+The ALB hostname is automatically populated by ALB Controller → Route53 record is updated via Terraform.
+
+### Verification
+
+```bash
+# 1. DNS resolution
+$ nslookup nginx.poc-eks.ailves2009.com
+Non-authoritative answer:
+Name:   nginx.poc-eks.ailves2009.com
+Address: 52.xyz.abc (ELBv2 public IP)
+
+# 2. HTTPS connectivity
+$ curl -I https://nginx.poc-eks.ailves2009.com
+HTTP/2 200
+server: nginx/1.25.5
+
+# 3. Certificate validation
+$ openssl s_client -connect nginx.poc-eks.ailves2009.com:443 -servername nginx.poc-eks.ailves2009.com
+...
+Subject: CN=*.poc-eks.ailves2009.com
+Issuer: Amazon RSA 2048 M03
+```
 
 ---
 
