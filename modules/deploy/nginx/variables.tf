@@ -67,3 +67,27 @@ variable "hpa_max_replicas" {
   type        = number
   default     = 5
 }
+
+variable "cpu_request" {
+  description = "CPU request for nginx container"
+  type        = string
+  default     = "100m"
+}
+
+variable "memory_request" {
+  description = "Memory request for nginx container"
+  type        = string
+  default     = "128Mi"
+}
+
+variable "cpu_limit" {
+  description = "CPU limit for nginx container"
+  type        = string
+  default     = "500m"
+}
+
+variable "memory_limit" {
+  description = "Memory limit for nginx container"
+  type        = string
+  default     = "256Mi"
+}

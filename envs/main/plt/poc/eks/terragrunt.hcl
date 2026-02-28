@@ -43,22 +43,21 @@ dependency "vpc" {
   config_path = "../vpc"
 
   mock_outputs = {
-    vpc_id       = "mock-vpc-id"
-    private_subnet_ids = ["mock-subnet-1", "mock-subnet-2"]
+    vpc_id              = "mock-vpc-id"
+    private_subnet_ids  = ["mock-subnet-1", "mock-subnet-2"]
   }
 }
 
 dependency "key-pair" {
   config_path = "../key-pair"
-
   mock_outputs = {
     key_pair_name  = "mock-key_pair_name"
   }
 }
 
 inputs = {
-  cluster_name          = "poc-plt-eks"
-  kubernetes_version    = "1.33"
+  cluster_name                              = "poc-plt-eks"
+  kubernetes_version                        = "1.33"
 
   endpoint_public_access                    = true
   endpoint_private_access                   = true

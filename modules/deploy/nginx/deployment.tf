@@ -35,12 +35,12 @@ resource "kubernetes_deployment_v1" "nginx" {
 
           resources {
             requests = {
-              cpu    = "100m"
-              memory = "128Mi"
+              cpu    = var.cpu_request
+              memory = var.memory_request
             }
             limits = {
-              cpu    = "500m"
-              memory = "256Mi"
+              cpu    = var.cpu_limit
+              memory = var.memory_limit
             }
           }
 

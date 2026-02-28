@@ -1,8 +1,5 @@
 # /envs/main/plt/poc/cluster_autoscaler/terragrunt.hcl
 
-# Skip if kubernetes cluster is not accessible (e.g., during destroy after eks is deleted)
-skip = false
-
 terraform {
   source = "../../../../../modules/cluster_autoscaler"
 }

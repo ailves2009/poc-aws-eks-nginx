@@ -60,20 +60,19 @@ dependency "eks" {
   config_path = "../eks"
 
   mock_outputs = {
-    cluster_name                        = "mock-cluster_name"
-    eks_endpoint                        = "mock_eks_endpoint"
-    cluster_ca_certificate              = "mock_cluster_ca_certificate"
-    cluster_token                       = "mock_cluster_token"
+    cluster_name                     = "mock-cluster_name"
+    kube_host                        = "mock_eks_endpoint"
+    kube_ca                          = "mock_cluster_ca_certificate"
+    kube_token                       = "mock_cluster_token"
   }
+  mock_outputs_allowed_terraform_commands = ["plan", "validate", "init"]
 }
 
 dependency "acm" {
   config_path = "../acm"
-
   mock_outputs = {
     wildcard_certificate_arn = ""
   }
-
   mock_outputs_allowed_terraform_commands = ["plan", "validate", "init"]
 }
 
@@ -86,6 +85,10 @@ inputs = {
   kube_token              = ""
   certificate_arn         = dependency.acm.outputs.wildcard_certificate_arn
   hpa_average_utilization = 75
-  hpa_min_replicas        = 2
+  hpa_min_replicas        = 1
   hpa_max_replicas        = 5
+  cpu_request             = "75m"
+  memory_request          = "128Mi"
+  cpu_limit               = "200m"
+  memory_limit            = "256Mi"
 }

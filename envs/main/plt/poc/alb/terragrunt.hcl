@@ -94,40 +94,33 @@ dependency "eks" {
     kube_ca                       = "mock_cluster_ca_certificate"
     kube_token                    = "mock_cluster_token"
   }
-
   mock_outputs_allowed_terraform_commands = ["plan", "validate", "init"]
   skip_outputs = false
 }
 
 dependency "deploy" {
   config_path = "../deploy"
-
   mock_outputs = {
     ingress_alb_hostname = ""
   }
-
   mock_outputs_allowed_terraform_commands = ["plan", "validate", "init"]
   skip_outputs = false
 }
 
 dependency "dns" {
   config_path = "../dns"
-
   mock_outputs = {
     hosted_zone_id = ""
   }
-
   mock_outputs_allowed_terraform_commands = ["plan", "validate", "init"]
   skip_outputs = false
 }
 
 dependency "acm" {
   config_path = "../acm"
-
   mock_outputs = {
     wildcard_certificate_arn = ""
   }
-
   mock_outputs_allowed_terraform_commands = ["plan", "validate", "init"]
   skip_outputs = false
 }
