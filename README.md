@@ -61,11 +61,10 @@ In an empty AWS account, perform the following:
 - Cluster Autoscaler for node-level scaling (2-5 nodes, t3.medium spot)
 - Metrics Server for HPA metrics collection
 - AWS Load Balancer Controller v3.0.0
-- NGINX deployment with HPA (CPU target: 50%, 2-5 replicas)
+- NGINX deployment with HPA (CPU target: 70%, 2-5 replicas)
 - ACM wildcard certificate for `*.poc-eks.ailves2009.com` (ISSUED)
 - Route53 CNAME record for DNS resolution
 - **End-to-end HTTPS working:** `https://nginx.poc-eks.ailves2009.com` → HTTP/2 200 OK
-- Dynamic Kubernetes provider auth (exec plugin, no token expiration)
 - GitHub repository with secret history cleaned
 - **CNI:** AWS VPC CNI (built-in EKS plugin, no Network Policies)
 
@@ -73,7 +72,6 @@ In an empty AWS account, perform the following:
 - **Cluster Autoscaler:** Deployed, but parameters not fully documented:
   - Scale-down grace period: 10 minutes
   - Min nodes: 2, Max nodes: 5
-  - See: `modules/cluster_autoscaler/` for Helm values
 
 ### ❌ Not Implemented (Future Enhancements)
 - **Pod Disruption Budgets (PDB)** — Increases availability of critical pods
@@ -81,6 +79,7 @@ In an empty AWS account, perform the following:
 - **Separate node groups** (system vs application workloads)
 - **Network Policies** — Requires Calico, Cilium, or similar (AWS VPC CNI doesn't support)
 - Observability: Prometheus, Grafana, CloudWatch Logs
+- Network Policies / Service Mesh (Cilium, Istio)
 - Image security scanning
 - Admission controllers (OPA, Kyverno)
 - GitOps (ArgoCD, Flux)
