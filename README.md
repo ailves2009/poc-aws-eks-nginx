@@ -69,38 +69,41 @@ In an empty AWS account, perform the following:
 ### Layer Structure
 
 ```
-modules/                                # Reusable Terraform modules
+modules/                               # Reusable Terraform modules
 ├── vpc/                               # VPC, subnets, security groups
 ├── eks/                               # EKS cluster + OIDC provider
+├── cluster_autoscaler/                # ??
 ├── eks_kubectl/                       # In-cluster resources (RBAC, CRDs)
 ├── acm/                               # ACM certificate management
 ├── dns/                               # Route53 records
 ├── alb/                               # ALB + ALB Controller (Helm)
 ├── deploy/nginx/                      # NGINX deployment + service + ingress
 ├── iam/                               # IAM policies and roles
+├── iam-state/                         # IAM policies for deployment role
 ├── key-pair/                          # EC2 key pair (debugging)
-└── monitoring/                        # Metrics Server (HPA support)
+└── metrics/                           # Metrics Server (HPA support)
 
 envs/
 └── main/plt/poc/                      # Platform layer, POC environment
     ├── root.hcl                       # Shared variables (domain, region, cluster name)
     ├── vpc/terragrunt.hcl
+    ├── cluster_autoscaler/terragrunt.hcl
+    ├── eks_kubectl/terragrunt.hcl    
     ├── eks/terragrunt.hcl
     ├── acm/terragrunt.hcl
     ├── dns/terragrunt.hcl
     ├── alb/terragrunt.hcl
     ├── deploy/terragrunt.hcl
-    ├── eks_kubectl/terragrunt.hcl
-    └── monitoring/terragrunt.hcl
+    └── metrics/terragrunt.hcl
 ```
 
 ### Remote State Management
 
-| Component | Backend | Locking |
-|-----------|---------|----------|
-| Terraform state | S3 (encrypted at rest) | DynamoDB |
-| IaC roles | Created by `envs/pred/plt/poc/iam-state/` | Manual |
-| State bucket | Created by `envs/pred/plt/poc/s3-state/` | Manual |
+| Component       | Backend                                   | Locking   |
+|-----------------|-------------------------------------------|-----------|
+| Terraform state | S3 (encrypted at rest)                    | Terraform |
+| IaC roles       | Created by `envs/pred/plt/poc/iam-state/` | Manual.   |
+| State bucket    | Created by `envs/pred/plt/poc/s3-state/`  | Manual    |
 
 ### IaC Best Practices Implemented
 
@@ -157,25 +160,25 @@ envs/
 
 ### Cluster Configuration
 
-| Parameter | Value | Purpose |
-|-----------|-------|----------|
-| **Cluster name** | `poc-plt-eks` | Identifier in AWS |
-| **Kubernetes version** | 1.30 | Specified in `modules/eks/main.tf` |
-| **Endpoint** | Restricted to VPC | Not publicly accessible |
-| **OIDC provider** | Enabled | For IRSA (pod IAM roles) |
-| **Control plane logging** | CloudWatch enabled | Audit/troubleshooting |
-| **Availability Zones** | 3 (eu-west-3a, 3b, 3c) | High availability |
+| Parameter                 | Value              | Purpose                           |
+|---------------------------|--------------------|-----------------------------------|
+| **Cluster name**          | `poc-plt-eks`      | Identifier in AWS                 |
+| **Kubernetes version**    | 1.30               | Specified in `modules/eks/main.tf`|
+| **Endpoint**              | Restricted to VPC  | Not publicly accessible           |
+| **OIDC provider**         | Enabled            | For IRSA (pod IAM roles)          |
+| **Control plane logging** | CloudWatch enabled | Audit/troubleshooting             |
+| **Availability Zones**    | 3 (eu-west-3a, 3b) | High availability                 |
 
 
-### NAmespaces and SAs
+### Namespaces and SAs
 
 | Namespace     | Purpose.        | Service Accounts               |
 |---------------|-----------------|--------------------------------|
-| `kube-system` | Cluster add-ons | `cluster-autoscaler`,
-                                    `aws-load-balancer-controller`,
-                                    `metrics-server`               |
+| `kube-system` | Cluster add-ons | `cluster-autoscaler`,          |
+|               |                 | `aws-load-balancer-controller`,|
+|               |                 | `metrics-server`               |
 | `nginx`       | App workload    | `default` (NGINX pods)         |
-| `default`     | Rarely used | — |
+| `default`     | Rarely used     |  —                             |
 
 ---
 
