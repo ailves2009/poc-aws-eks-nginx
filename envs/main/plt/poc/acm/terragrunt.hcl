@@ -24,6 +24,21 @@ terraform {
 EOF
 }
 
+generate "providers_version" {
+  path      = "versions.tf"
+  if_exists = "overwrite"
+  contents  = <<EOF
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 5.0.0"
+    }
+  }
+}
+EOF
+}
+
 inputs = {
   enable_monitoring       = true
   alarm_email             = ["ailves2009@gmail.com"]
