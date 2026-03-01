@@ -61,7 +61,7 @@ In an empty AWS account, perform the following:
 - Metrics Server for HPA metrics collection
 - AWS Load Balancer Controller v3.0.0
 - NGINX deployment with HPA (CPU target: 70%, 2-5 replicas)
-- ACM wildcard certificate for `*.poc-eks.ailves2009.com` (ISSUED)
+- ACM wildcard certificate for `*.poc-eks.ailves2009.com`
 - Route53 CNAME record for DNS resolution
 - **End-to-end HTTPS working:** `https://nginx.poc-eks.ailves2009.com` → HTTP/2 200 OK
 - GitHub repository with secret history cleaned
@@ -192,7 +192,7 @@ modules/                               # Reusable Terraform modules
 
 ### Deployed
 
-- **Managed Kubernetes:** Amazon EKS (v1.33) to reduce operational risk
+- **Managed Kubernetes:** Amazon EKS (v1.33) 
 - **High availability:** Spread across 3 Availability Zones (eu-west-3a, 3b, 3c)
 - **Authentication:** IAM via OIDC provider (IRSA for pod IAM roles)
 - **Control plane logging:** CloudWatch Logs enabled for audit trail
