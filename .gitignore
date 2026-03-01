@@ -13,10 +13,6 @@ data/
 *-secret.yaml
 !*-sealed-secret.yaml
 
-# Terraform lock files
-.terraform.lock.hcl
-**/.terraform.lock.hcl
-
 # Terragrunt cache
 .terragrunt-cache/
 **/.terragrunt-cache/

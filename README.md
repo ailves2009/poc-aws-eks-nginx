@@ -121,6 +121,11 @@ envs/
 2. `pred/plt/poc/s3-state/` → creates S3 bucket + state locking
 3. All modules in `main/plt/poc/` → infrastructure deployment
 
+cd /poc-aws-eks-nginx/envs/pred/plt/poc/iam-state && \
+terragrunt init && \
+terragrunt plan -out=tfplan && \
+terragrunt apply tfplan
+
 #### Reusable Modules
 
 ```
